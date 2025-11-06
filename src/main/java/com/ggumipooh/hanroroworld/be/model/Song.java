@@ -18,7 +18,8 @@ public class Song extends BaseEntity {
 
     @Column
     @JdbcTypeCode(SqlTypes.JSON)
-    private LanguageData lyrics;
+    @ElementCollection
+    private List<LanguageData> lyrics;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "album_id")

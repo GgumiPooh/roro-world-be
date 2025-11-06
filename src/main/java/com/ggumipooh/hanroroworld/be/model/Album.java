@@ -1,9 +1,6 @@
 package com.ggumipooh.hanroroworld.be.model;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -22,6 +19,8 @@ public class Album extends BaseEntity {
     private Instant publishedAt;
 
     @Column
+    @JdbcTypeCode(SqlTypes.JSON)
+    @ElementCollection
     private List<LanguageData> description;
 
     @Column

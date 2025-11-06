@@ -23,7 +23,7 @@ public class Activity extends BaseEntity {
 
     @Column
     @JdbcTypeCode(SqlTypes.JSON)
-    private LanguageData description;
+    private List<LanguageData> description;
 
     @Column
     @Enumerated(EnumType.STRING)

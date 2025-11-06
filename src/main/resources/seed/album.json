@@ -1,0 +1,19 @@
+[
+  {
+    "publishedAt" : "",
+    "title" : [
+      {"language" : "kor", "content" :  ""},
+      {"language" : "eng", "content" :  ""}
+    ],
+    "description" :
+    [
+      {"language" : "kor", "content" :  ""},
+      {"language" : "eng", "content" :  ""}
+    ],
+    "metaData" :
+    [
+      {"type" : "img", "url" : ""},
+      {"type" :  "video", "url" : ""}
+    ]
+  }
+]

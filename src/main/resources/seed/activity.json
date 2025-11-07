@@ -584,6 +584,19 @@
     ]
   },
   {
+    "activeFrom": "2025-07-04T00:00:00Z",
+    "activeTo": "2025-07-04T00:00:00Z",
+    "type": "PERFORMANCE",
+    "title": [
+      { "content": "Live Wire 3화 출현", "language": "kor" },
+      { "content": "Live Wire Episode3", "language": "eng" }
+    ],
+    "metaData": [
+      { "type": "img", "url": "https://github.com/GgumiPooh/assets/blob/main/images/performance/%EB%9D%BC%EC%9D%B4%EB%B8%8C%EC%99%80%EC%9D%B4%EC%96%B4%EC%B6%9C%ED%98%84.png?raw=true" },
+      { "type": "video", "url": "https://www.youtube.com/watch?v=2OIHIc_O86I&list=RD2OIHIc_O86I&start_radio=1" }
+    ]
+  },
+  {
     "activeFrom": "2025-07-11T00:00:00Z",
     "activeTo": "2025-07-11T00:00:00Z",
     "type": "AWARD",

@@ -1,4 +1,4 @@
-package com.ggumipooh.hanroroworld.be.repository;
+package com.ggumipooh.hanroroworld.be.Repository;
 
 import com.ggumipooh.hanroroworld.be.model.activity.Activity;
 
@@ -12,5 +12,5 @@ import org.springframework.stereotype.Repository;
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
 
     List<Activity> findAllByActiveFromGreaterThanEqualAndActiveFromLessThan(Instant startInclusive,
-    Instant endExclusive);
+            Instant endExclusive);
 }

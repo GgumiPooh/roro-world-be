@@ -1,4 +1,4 @@
-package com.ggumipooh.hanroroworld.be.repository;
+package com.ggumipooh.hanroroworld.be.Repository;
 
 import com.ggumipooh.hanroroworld.be.model.UserFavoriteSong;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,7 +1,7 @@
 package com.ggumipooh.hanroroworld.be.service;
 
 import com.ggumipooh.hanroroworld.be.model.Song;
-import com.ggumipooh.hanroroworld.be.repository.SongRepository;
+import com.ggumipooh.hanroroworld.be.Repository.SongRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

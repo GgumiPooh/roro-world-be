@@ -23,9 +23,12 @@ public class PublicController {
     private final SongService songService;
     private final GoodsService goodsService;
 
-    @GetMapping("/activity")
-    public List<Activity> getActivities() {
-        return  activityService.getAllActivities();
+    @GetMapping("/activity/{year}")
+    public List<Activity> getActivities(@RequestParam(required = false) Integer year) {
+        if (year == null) {
+            return activityService.getAllActivities();
+        }
+        return activityService.getActivitiesStartingInYear(year);
     }
 
     @GetMapping("/album")

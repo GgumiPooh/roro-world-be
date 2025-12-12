@@ -1,4 +1,4 @@
-package com.ggumipooh.hanroroworld.be.Repository;
+package com.ggumipooh.hanroroworld.be.repository;
 
 import com.ggumipooh.hanroroworld.be.model.Album;
 import org.springframework.data.jpa.repository.JpaRepository;

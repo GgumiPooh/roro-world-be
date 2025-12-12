@@ -2,8 +2,9 @@ package com.ggumipooh.hanroroworld.be;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ggumipooh.hanroroworld.be.Repository.ActivityRepository;
 import com.ggumipooh.hanroroworld.be.model.activity.Activity;
+import com.ggumipooh.hanroroworld.be.repository.ActivityRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;

@@ -1,7 +1,8 @@
 package com.ggumipooh.hanroroworld.be.service;
 
-import com.ggumipooh.hanroroworld.be.Repository.AlbumRepository;
 import com.ggumipooh.hanroroworld.be.model.Album;
+import com.ggumipooh.hanroroworld.be.repository.AlbumRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

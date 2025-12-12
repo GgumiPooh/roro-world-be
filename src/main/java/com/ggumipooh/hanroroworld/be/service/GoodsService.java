@@ -1,7 +1,8 @@
 package com.ggumipooh.hanroroworld.be.service;
 
-import com.ggumipooh.hanroroworld.be.Repository.GoodsRepository;
 import com.ggumipooh.hanroroworld.be.model.Goods;
+import com.ggumipooh.hanroroworld.be.repository.GoodsRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

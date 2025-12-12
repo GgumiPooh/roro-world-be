@@ -1,7 +1,8 @@
 package com.ggumipooh.hanroroworld.be.service;
 
-import com.ggumipooh.hanroroworld.be.Repository.ActivityRepository;
 import com.ggumipooh.hanroroworld.be.model.activity.Activity;
+import com.ggumipooh.hanroroworld.be.repository.ActivityRepository;
+
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,6 @@
 package com.ggumipooh.hanroroworld.be.config;
 
-import com.ggumipooh.hanroroworld.be.security.NaverOAuth2UserService;
+import com.ggumipooh.hanroroworld.be.security.CustomOAuth2UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,10 +11,10 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final NaverOAuth2UserService naverOAuth2UserService;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
-    public SecurityConfig(NaverOAuth2UserService naverOAuth2UserService) {
-        this.naverOAuth2UserService = naverOAuth2UserService;
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService) {
+        this.customOAuth2UserService = customOAuth2UserService;
     }
 
     @Bean
@@ -31,7 +31,7 @@ public class SecurityConfig {
                 .oauth2Login(oauth -> oauth
                         .authorizationEndpoint(ae -> ae.baseUri("/oauth2.0/authorization"))
                         .redirectionEndpoint(redir -> redir.baseUri("/api/public/auth/*/callback"))
-                        .userInfoEndpoint(cfg -> cfg.userService(naverOAuth2UserService)));
+                        .userInfoEndpoint(cfg -> cfg.userService(customOAuth2UserService)));
 
         return http.build();
     }

@@ -24,15 +24,20 @@ public class SecurityConfig {
                 .cors(cors -> {
                 }) // ✅ Security에서 CORS 활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/health", "/oauth2/**", "/oauth2.0/**", "/login/**", "/api/auth/**",
-                                "/api/public/auth/**")
+                        .requestMatchers("/health", "/oauth2/**", "/login/**", "/api/auth/**", "/error")
                         .permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth -> oauth
-                        .authorizationEndpoint(ae -> ae.baseUri("/oauth2.0/authorization"))
-                        .redirectionEndpoint(redir -> redir.baseUri("/api/public/auth/*/callback"))
-                        .userInfoEndpoint(cfg -> cfg.userService(customOAuth2UserService)));
-
+                        .authorizationEndpoint(ae -> ae.baseUri("/oauth2/authorization"))
+                        .redirectionEndpoint(redir -> redir.baseUri("/login/oauth2/code/*"))
+                        .userInfoEndpoint(cfg -> cfg.userService(customOAuth2UserService))
+                        .successHandler((req, res, auth) -> res.sendRedirect("http://localhost:5173"))
+                        .failureHandler((req, res, ex) -> {
+                            ex.printStackTrace();
+                            res.sendRedirect("/login?oauth2_error=" +
+                                    java.net.URLEncoder.encode(ex.getMessage(),
+                                            java.nio.charset.StandardCharsets.UTF_8));
+                        }));
         return http.build();
     }
 }

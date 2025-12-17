@@ -12,7 +12,11 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 @Component
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
@@ -27,97 +31,69 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 	@Override
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 		OAuth2User oauth2User = delegate.loadUser(userRequest);
-		Map<String, Object> normalized = normalizeAttributes(
-				userRequest.getClientRegistration().getRegistrationId(),
-				oauth2User.getAttributes());
+		String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
-		String provider = userRequest.getClientRegistration().getRegistrationId();
-		String providerUserId = String.valueOf(normalized.get("id"));
-
-		upsertUser(provider, providerUserId, normalized);
-
-		Collection<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
-		return new DefaultOAuth2User(authorities, normalized, "id");
-	}
-
-	private Map<String, Object> normalizeAttributes(String provider, Map<String, Object> attributes) {
-		Map<String, Object> result = new HashMap<>();
-		if ("naver".equals(provider)) {
+		// Normalize only for Naver so that 'id' is available at the top-level
+		if ("naver".equals(registrationId)) {
+			Map<String, Object> attributes = oauth2User.getAttributes();
 			@SuppressWarnings("unchecked")
 			Map<String, Object> response = (Map<String, Object>) attributes.get("response");
-			if (response != null) {
-				result.putAll(response);
-			}
-			copyIfPresent(attributes, result, "id");
-			result.putIfAbsent("name", result.get("name"));
-			result.putIfAbsent("email", result.get("email"));
-			result.putIfAbsent("profile_image", result.get("profile_image"));
-		} else if ("kakao".equals(provider)) {
-			// Kakao structure: id (top), properties{nickname, profile_image},
-			// kakao_account{email, profile{nickname, profile_image_url}}
-			Object id = attributes.get("id");
-			result.put("id", String.valueOf(id));
 
-			@SuppressWarnings("unchecked")
-			Map<String, Object> properties = (Map<String, Object>) attributes.get("properties");
-			@SuppressWarnings("unchecked")
-			Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-			@SuppressWarnings("unchecked")
-			Map<String, Object> profile = kakaoAccount != null ? (Map<String, Object>) kakaoAccount.get("profile")
-					: null;
+			String providerUserId = response != null ? asString(response.get("id")) : asString(attributes.get("id"));
+			String nickname = response != null ? asString(response.get("nickname"))
+					: asString(attributes.get("nickname"));
 
-			String nickname = null;
-			String profileImage = null;
-			String email = null;
-
-			if (properties != null) {
-				nickname = getString(properties, "nickname");
-				profileImage = getString(properties, "profile_image");
-			}
-			if (profile != null) {
-				if (nickname == null)
-					nickname = getString(profile, "nickname");
-				// profile image url key may be profile_image_url
-				if (profileImage == null)
-					profileImage = getString(profile, "profile_image_url");
-			}
-			if (kakaoAccount != null) {
-				if (email == null)
-					email = getString(kakaoAccount, "email");
+			// If provider user id is missing, return original user to avoid null 'id'
+			// attribute errors
+			if (providerUserId == null) {
+				return oauth2User;
 			}
 
-			result.put("name", nickname != null ? nickname : "kakao_" + result.get("id"));
-			if (email != null)
-				result.put("email", email);
-			if (profileImage != null)
-				result.put("profile_image", profileImage);
-		} else {
-			// default passthrough
-			result.putAll(attributes);
+			// Persist only on first sign-in: nickname, provider, providerId
+			final String nicknameToSave = nickname;
+			if (userRepository.findByProviderAndProviderId(registrationId, providerUserId).isEmpty()) {
+				userRepository.save(Objects.requireNonNull(
+						User.builder()
+								.nickname(nicknameToSave)
+								.provider(registrationId)
+								.providerId(providerUserId)
+								.build()));
+			}
+
+			Map<String, Object> normalized = new HashMap<>();
+			normalized.put("id", providerUserId);
+			if (nickname != null) {
+				normalized.put("name", nickname);
+			}
+
+			Collection<GrantedAuthority> authorities = Collections
+					.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+			return new DefaultOAuth2User(authorities, normalized, "id");
 		}
-		return result;
-	}
 
-	private static void copyIfPresent(Map<String, Object> source, Map<String, Object> target, String key) {
-		if (source.containsKey(key)) {
-			target.put(key, source.get(key));
+		// For other providers, persist minimal fields if first sign-in, then pass
+		// through unchanged
+		String providerId = oauth2User.getName(); // usually the subject or provider user id
+		String rawNickname = asString(oauth2User.getAttributes().get("nickname"));
+		if (rawNickname == null) {
+			rawNickname = asString(oauth2User.getAttributes().get("name"));
 		}
+		final String nicknameToSave = rawNickname;
+		if (providerId != null) {
+			if (userRepository.findByProviderAndProviderId(registrationId, providerId).isEmpty()) {
+				userRepository.save(Objects.requireNonNull(
+						User.builder()
+								.nickname(nicknameToSave)
+								.provider(registrationId)
+								.providerId(providerId)
+								.build()));
+			}
+		}
+
+		return oauth2User;
 	}
 
-	private static String getString(Map<String, Object> map, String key) {
-		Object v = map.get(key);
-		return v == null ? null : String.valueOf(v);
-	}
-
-	private void upsertUser(String provider, String providerUserId, Map<String, Object> attributes) {
-		userRepository.findByProviderAndProviderId(provider, providerUserId)
-				.orElseGet(() -> {
-					User newUser = User.builder()
-							.provider(provider)
-							.providerId(providerUserId)
-							.nickname((String) attributes.getOrDefault("name", provider + "_" + providerUserId))
-							.build();
-					return userRepository.save(newUser);
-				});
+	private static String asString(Object value) {
+		return value == null ? null : String.valueOf(value);
 	}
 }

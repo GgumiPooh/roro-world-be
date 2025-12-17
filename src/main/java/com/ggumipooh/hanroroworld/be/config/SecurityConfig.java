@@ -34,7 +34,8 @@ public class SecurityConfig {
                 .cors(cors -> {
                 }) // ✅ Security에서 CORS 활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/health", "/oauth2/**", "/login/**", "/api/auth/**", "/error")
+                        .requestMatchers("/health", "/oauth2/**", "/login/**", "/api/auth/**", "/api/public/**",
+                                "/error")
                         .permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth -> oauth

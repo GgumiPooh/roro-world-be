@@ -1,7 +1,7 @@
 package com.ggumipooh.hanroroworld.be.service;
 
 import com.ggumipooh.hanroroworld.be.model.Song;
-import com.ggumipooh.hanroroworld.be.Repository.SongRepository;
+import com.ggumipooh.hanroroworld.be.repository.SongRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,5 +20,9 @@ public class SongService {
 
     public Song getById(Long id) {
         return songRepository.findById(id).orElse(null);
+    }
+
+    public List<Song> getSongsByAlbum(Long albumId) {
+        return songRepository.findByAlbumId(albumId);
     }
 }

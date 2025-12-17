@@ -36,13 +36,14 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 		// Normalize only for Naver so that 'id' is available at the top-level
 		if ("naver".equals(registrationId)) {
 			Map<String, Object> attributes = oauth2User.getAttributes();
+			System.out.println("[NAVER raw attributes] " + oauth2User.getAttributes());
 			@SuppressWarnings("unchecked")
 			Map<String, Object> response = (Map<String, Object>) attributes.get("response");
+			System.out.println("[NAVER raw response] " + response);
 
 			String providerUserId = response != null ? asString(response.get("id")) : asString(attributes.get("id"));
-			String nickname = response != null ? asString(response.get("nickname"))
-					: asString(attributes.get("nickname"));
-
+			String displayName = response != null ? asString(response.get("nickname")) : null;
+			System.out.println("displayName: " + displayName);
 			// If provider user id is missing, return original user to avoid null 'id'
 			// attribute errors
 			if (providerUserId == null) {
@@ -50,7 +51,58 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 			}
 
 			// Persist only on first sign-in: nickname, provider, providerId
-			final String nicknameToSave = nickname;
+			final String nicknameToSave = (displayName == null || displayName.isBlank())
+					? ("naver_" + providerUserId)
+					: displayName;
+			System.out.println("nicknameToSave: " + nicknameToSave);
+			if (userRepository.findByProviderAndProviderId(registrationId, providerUserId).isEmpty()) {
+				userRepository.save(Objects.requireNonNull(
+						User.builder()
+								.nickname(nicknameToSave)
+								.provider(registrationId)
+								.providerId(providerUserId)
+								.build()));
+			}
+
+			Map<String, Object> normalized = new HashMap<>();
+			// maintain both keys so downstream code can use either
+			normalized.put("id", providerUserId);
+			normalized.put("response", providerUserId);
+			normalized.put("name", nicknameToSave);
+
+			Collection<GrantedAuthority> authorities = Collections
+					.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+			return new DefaultOAuth2User(authorities, normalized, "response");
+
+		} else if ("kakao".equals(registrationId)) {
+			Map<String, Object> attributes = oauth2User.getAttributes();
+			String providerUserId = asString(attributes.get("id"));
+			String nickname = null;
+			@SuppressWarnings("unchecked")
+			Map<String, Object> properties = (Map<String, Object>) attributes.get("properties");
+			if (properties != null) {
+				nickname = asString(properties.get("nickname"));
+			}
+			if (nickname == null) {
+				@SuppressWarnings("unchecked")
+				Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+				if (kakaoAccount != null) {
+					@SuppressWarnings("unchecked")
+					Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+					if (profile != null) {
+						nickname = asString(profile.get("nickname"));
+					}
+				}
+			}
+
+			// If provider user id is missing, return original user to avoid null 'id'
+			// attribute errors
+			if (providerUserId == null) {
+				return oauth2User;
+			}
+			final String nicknameToSave = (nickname == null || nickname.isBlank())
+					? ("kakao_" + providerUserId)
+					: nickname;
 			if (userRepository.findByProviderAndProviderId(registrationId, providerUserId).isEmpty()) {
 				userRepository.save(Objects.requireNonNull(
 						User.builder()
@@ -62,34 +114,30 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
 			Map<String, Object> normalized = new HashMap<>();
 			normalized.put("id", providerUserId);
-			if (nickname != null) {
-				normalized.put("name", nickname);
-			}
+			normalized.put("name", nicknameToSave);
 
 			Collection<GrantedAuthority> authorities = Collections
 					.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
 			return new DefaultOAuth2User(authorities, normalized, "id");
 		}
-
-		// For other providers, persist minimal fields if first sign-in, then pass
-		// through unchanged
 		String providerId = oauth2User.getName(); // usually the subject or provider user id
+		// Try common nickname keys, then fallback
 		String rawNickname = asString(oauth2User.getAttributes().get("nickname"));
 		if (rawNickname == null) {
 			rawNickname = asString(oauth2User.getAttributes().get("name"));
 		}
-		final String nicknameToSave = rawNickname;
 		if (providerId != null) {
 			if (userRepository.findByProviderAndProviderId(registrationId, providerId).isEmpty()) {
 				userRepository.save(Objects.requireNonNull(
 						User.builder()
-								.nickname(nicknameToSave)
+								.nickname((rawNickname == null || rawNickname.isBlank())
+										? (registrationId + "_" + providerId)
+										: rawNickname)
 								.provider(registrationId)
 								.providerId(providerId)
 								.build()));
 			}
 		}
-
 		return oauth2User;
 	}
 

@@ -36,14 +36,12 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 		// Normalize only for Naver so that 'id' is available at the top-level
 		if ("naver".equals(registrationId)) {
 			Map<String, Object> attributes = oauth2User.getAttributes();
-			System.out.println("[NAVER raw attributes] " + oauth2User.getAttributes());
 			@SuppressWarnings("unchecked")
 			Map<String, Object> response = (Map<String, Object>) attributes.get("response");
-			System.out.println("[NAVER raw response] " + response);
 
 			String providerUserId = response != null ? asString(response.get("id")) : asString(attributes.get("id"));
 			String displayName = response != null ? asString(response.get("nickname")) : null;
-			System.out.println("displayName: " + displayName);
+
 			// If provider user id is missing, return original user to avoid null 'id'
 			// attribute errors
 			if (providerUserId == null) {
@@ -54,7 +52,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 			final String nicknameToSave = (displayName == null || displayName.isBlank())
 					? ("naver_" + providerUserId)
 					: displayName;
-			System.out.println("nicknameToSave: " + nicknameToSave);
 			if (userRepository.findByProviderAndProviderId(registrationId, providerUserId).isEmpty()) {
 				userRepository.save(Objects.requireNonNull(
 						User.builder()
@@ -76,19 +73,26 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
 		} else if ("kakao".equals(registrationId)) {
 			Map<String, Object> attributes = oauth2User.getAttributes();
+			System.out.println("[KAKAO raw attributes] " + attributes);
+			@SuppressWarnings("unchecked")
+			Map<String, Object> kakaoResponse = (Map<String, Object>) attributes.get("kakao_account");
+			System.out.println("[KAKAO response] " + kakaoResponse);
 			String providerUserId = asString(attributes.get("id"));
 			String nickname = null;
 			@SuppressWarnings("unchecked")
 			Map<String, Object> properties = (Map<String, Object>) attributes.get("properties");
+			System.out.println("[KAKAO properties] " + properties);
 			if (properties != null) {
 				nickname = asString(properties.get("nickname"));
 			}
 			if (nickname == null) {
 				@SuppressWarnings("unchecked")
 				Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+				System.out.println("[KAKAO kakao_account] " + kakaoAccount);
 				if (kakaoAccount != null) {
 					@SuppressWarnings("unchecked")
 					Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+					System.out.println("[KAKAO profile] " + profile);
 					if (profile != null) {
 						nickname = asString(profile.get("nickname"));
 					}

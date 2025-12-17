@@ -21,7 +21,7 @@ public class ActivityDataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (run = false) {
+        if (run == false) {
             System.out.println("🟡 Milestones already exist. Skipping seeding...");
             return;
         }

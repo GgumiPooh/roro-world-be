@@ -1,18 +1,23 @@
 [
   {
+    "albumId" : 17,
     "title" : [
-      {"language" : "kor", "content" :  ""},
-      {"language" : "eng", "content" :  ""}
+      {"language" : "kor", "content" :  "내일에서 온 티켓"},
+      {"language" : "eng", "content" :  "Ticket from Tomorrow"}
+    ],
+    "metadata" : [
+      { "type" : "img", "url" : ""},
+      { "type" : "video", "url" : ""}
     ],
     "description" :
     [
-      {"language" : "kor", "content" :  ""},
-      {"language" : "eng", "content" :  ""}
+      {"language" : "kor", "content" :  "내일에서 온 티켓\n나의 낡은 울타리가 고쳐지기 시작한다. 몇 십 년을 움직이지 않던 먹구름이 바람 머금어 저 멀리 날아가자 그 뒤 숨어있던 빛이 나의 가슴에 눈부시게 쏟아진다. 서서히 팽창하는 가슴 두 쪽에는 눈물겨운 따스함이 차오른다. 죽은 줄 알았던 희망들이 햇빛 아래서 무럭무럭 자라나 울타리 안을 빠르게 채운다. 피어난 희망들이 마침내 힘차게 합창한다.\n살구 싶네,\n살구 싶어라,\n살구 싶어."},
+      {"language" : "eng", "content" :  "Ticket from Tomorrow\nMy old fence is beginning to be repaired. The few decades of inactivity that had been moving slowly suddenly flew away with the wind and the light that had been hiding behind it poured into my chest in a dazzling way. The two sides of the slowly expanding chest began to fill with the warm tears of hope that had been dead. The hope that had been growing under the sun began to fill the fence in a hurry. The hope that had finally sung in a powerful way. \nI want to be a peach, \nI want to be a peach, \nI want to be a peach."}
     ],
     "lyrics" :
     [
-      {"language" : "kor", "content" :  ""},
-      {"language" : "eng", "content" :  ""}
+      {"language" : "kor", "content" :  "아무런 예고도 없이 피어나버린 꽃\n손바닥 위 내려앉은 향에 긴장한 코\n이름도 사는 곳도 모르는 나의 구원자\n사이서 내가 감히 함께 외쳐봐도 될까요\n차갑던 햇살\n위태로운 눈물을 닦아주네\n원래 이랬던가?\n하루만 미뤄내보는 다이빙\n다친 맘을 고쳐낼 거야\n속눈썹 위에 떠도는 그림자\n쏟아지는 노을 타고 가볍게 날아가\n무거운 건 쟤들이 아닌 하루 끝의 나였다는 걸\n차갑던 햇살\n위태로운 눈물을 닦아주네\n원래 이랬던가?\n하루만 미뤄내보는 다이빙\n정말 꿈이 아니라면\n꿈틀대는 날개부터 다친 맘을 고쳐낼 거야"},
+      {"language" : "eng", "content" :  "A flower that has sprung up without any warning\nThe tense nose under the palm of the hand\nThe unknown savior who does not even know where he lives\nCan I dare to sing together with you?\nThe cold sun\nWipes away the tears that are trembling\nWas it like this?\nDiving for a day to postpone\nTo repair the bruised heart\nThe shadow floating above the eyebrow\nFalls on the day to come\nThe heavy one is not them but the end of the day\nThe cold sun\nWipes away the tears that are trembling\nWas it like this?\nDiving for a day to postpone\nIf it is not a dream\nThen the wings that are fluttering should be the first to repair the bruised heart"}
     ]
   }
 ]

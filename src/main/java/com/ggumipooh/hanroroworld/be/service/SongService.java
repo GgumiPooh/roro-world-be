@@ -23,6 +23,7 @@ public class SongService {
     }
 
     public List<Song> getSongsByAlbum(Long albumId) {
+        System.out.println("albumId: " + songRepository.findByAlbumId(albumId));
         return songRepository.findByAlbumId(albumId);
     }
 }

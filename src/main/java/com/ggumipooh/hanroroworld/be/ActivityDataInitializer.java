@@ -3,9 +3,11 @@ package com.ggumipooh.hanroroworld.be;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ggumipooh.hanroroworld.be.model.Album;
+import com.ggumipooh.hanroroworld.be.model.Song;
 import com.ggumipooh.hanroroworld.be.model.activity.Activity;
 import com.ggumipooh.hanroroworld.be.repository.ActivityRepository;
 import com.ggumipooh.hanroroworld.be.repository.AlbumRepository;
+import com.ggumipooh.hanroroworld.be.repository.SongRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -19,10 +21,12 @@ import java.util.List;
 public class ActivityDataInitializer implements CommandLineRunner {
 
     private final ActivityRepository activityRepository;
+    private final AlbumRepository albumRepository;
+    private final SongRepository songRepository;
     private final ObjectMapper objectMapper;
     private Boolean runActivity = false;
-    private Boolean runAlbum = true;
-    private final AlbumRepository albumRepository;
+    private Boolean runAlbum = false;
+    private Boolean runSong = true;
 
     @Override
     public void run(String... args) throws Exception {
@@ -55,6 +59,18 @@ public class ActivityDataInitializer implements CommandLineRunner {
                         });
                 albumRepository.saveAll(albums);
                 System.out.println("✅ Seeded " + albums.size() + " albums successfully!");
+            }
+        }
+        if (runSong == true) {
+            var songResource = new org.springframework.core.io.ClassPathResource("seed/song.json");
+            try (InputStream inputStream = songResource.getInputStream()) {
+                songRepository.deleteAll();
+                List<Song> songs = objectMapper.readValue(
+                        inputStream,
+                        new TypeReference<List<Song>>() {
+                        });
+                songRepository.saveAll(songs);
+                System.out.println("✅ Seeded " + songs.size() + " songs successfully!");
             }
         }
     }

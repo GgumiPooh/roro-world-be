@@ -13,19 +13,18 @@ import com.ggumipooh.hanroroworld.be.service.SongService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequiredArgsConstructor        
-@RequestMapping("/api/album")
+@RequiredArgsConstructor
+@RequestMapping("/api/public/album")
 public class AlbumController {
     private final AlbumService albumService;
     private final SongService songService;
-
 
     @GetMapping
     public List<Album> getAlbums() {
         return albumService.getAllAlbums();
     }
 
-    @GetMapping("/{albumId}/songs")
+    @GetMapping("/{albumId}")
     public List<Song> getSongs(@PathVariable Long albumId) {
         return songService.getSongsByAlbum(albumId);
     }

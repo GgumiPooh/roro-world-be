@@ -25,9 +25,13 @@ public class Song extends BaseEntity {
     @JoinColumn(name = "album_id")
     private Album album;
 
+    @Column
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<Metadata> metadata;
+
     @OneToMany(mappedBy = "song", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserFavoriteSong> userFavorites = new ArrayList<>();
 
-    @OneToMany(mappedBy = "song",  cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "song", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommentSong> comments = new ArrayList<>();
 }

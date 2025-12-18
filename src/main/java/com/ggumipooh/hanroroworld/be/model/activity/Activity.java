@@ -9,7 +9,7 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 @Entity
@@ -34,8 +34,8 @@ public class Activity extends BaseEntity {
     private List<Metadata> metaData;
 
     @Column
-    private Instant activeFrom;
+    private LocalDate activeFrom;
 
     @Column
-    private Instant activeTo;
+    private LocalDate activeTo;
 }

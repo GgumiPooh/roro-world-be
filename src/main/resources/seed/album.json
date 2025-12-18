@@ -1,19 +1,19 @@
 [
   {
-    "publishedAt" : "",
+    "publishedAt" : "2025-08-04",
     "title" : [
-      {"language" : "kor", "content" :  ""},
-      {"language" : "eng", "content" :  ""}
+      {"language" : "kor", "content" :  "3rd EP 자몽살구클럽"},
+      {"language" : "eng", "content" :  "3rd EP album 〈JAMONG SALGU CLUB〉"}
     ],
     "description" :
     [
-      {"language" : "kor", "content" :  ""},
-      {"language" : "eng", "content" :  ""}
+      {"language" : "kor", "content" :  "죽음 속에서 발견한 삶의 빛. 동명의 첫 소설과 연결된 한로로의 새로운 시도.\n「‘죽음.’ 자몽살구클럽을 관통하는 단어이자 우리들의 모순적인 소원. 나는 알고 있다. 죽고 싶지만 실은 죽고 싶지 않은 서로의 진심을 알아줄 사람은 서로밖에 없음을. 내게 손을 건넨 언니들은 이미 이 사실을 알고 있었다는 것을. 누군가에게는 평범한 오늘이 우리에게는 연명을 좌지우지하는 시한폭탄 같다는 것을 나는, 언니들은, 우리는 알고 있다. 얼마큼의 용기가, 연대가, 희망이, 사랑이, 내일이, 우리에게 간절한지. 이 자몽살구클럽만은 알고 있다. _p.40」"},
+      {"language" : "eng", "content" :  "The light of life found in death. A new attempt by Hanrolo connected to the first novel with the same name.\n“‘Death.’ The word that贯穿了 JAMONG SALGU CLUB and our contradictory wishes. I know that. I want to die but I don't want to die. The truth of our mutual desire to be understood by each other is only between us. The sisters who gave me their hand already knew this. That the common today is a time bomb for us. I know, you know, we know how much courage, solidarity, hope, love, tomorrow, is urgent for us. Only this JAMONG SALGU CLUB knows. _p.40」"}
     ],
     "metaData" :
     [
-      {"type" : "img", "url" : ""},
-      {"type" :  "video", "url" : ""}
+      {"type" : "img", "url" : "https://github.com/GgumiPooh/assets/blob/main/images/album/%EC%9E%90%EB%AA%BD%EC%82%B4%EA%B5%AC%ED%81%B4%EB%9F%BD%20%EC%95%A8%EB%B2%94.webp?raw=true"},
+      {"type" :  "video", "url" : "https://www.youtube.com/watch?v=1GUFm9FrPZI&list=RD1GUFm9FrPZI&start_radio=1&t=106s"}
     ]
   }
 ]

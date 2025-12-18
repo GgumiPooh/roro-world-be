@@ -21,7 +21,7 @@ public class ActivityDataInitializer implements CommandLineRunner {
     private final ActivityRepository activityRepository;
     private final ObjectMapper objectMapper;
     private Boolean runActivity = false;
-    private Boolean runAlbum = false;
+    private Boolean runAlbum = true;
     private final AlbumRepository albumRepository;
 
     @Override

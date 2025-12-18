@@ -24,8 +24,10 @@ public class Album extends BaseEntity {
     private LocalDate publishedAt;
 
     @Column
+    private String type;
+
+    @Column
     @JdbcTypeCode(SqlTypes.JSON)
-    @ElementCollection
     private List<LanguageData> description;
 
     @Column

@@ -82,6 +82,61 @@ public class TokenService {
 		return sha256Hex(refreshTokenPlain);
 	}
 
+	/**
+	 * Verifies the access JWT signature and expiration, then returns the subject (user id) as Long.
+	 * Throws IllegalArgumentException if invalid.
+	 */
+	public Long verifyAndExtractUserId(String jwt) {
+		if (jwt == null || jwt.isBlank()) {
+			throw new IllegalArgumentException("Missing token");
+		}
+		String[] parts = jwt.split("\\.");
+		if (parts.length != 3) {
+			throw new IllegalArgumentException("Invalid token format");
+		}
+		String header = parts[0];
+		String payload = parts[1];
+		String signature = parts[2];
+
+		// Verify signature
+		String expectedSig = hmacSha256(header + "." + payload, jwtSecret);
+		if (!constantTimeEquals(signature, expectedSig)) {
+			throw new IllegalArgumentException("Invalid token signature");
+		}
+
+		// Decode payload
+		String payloadJson = new String(base64UrlDecode(payload), StandardCharsets.UTF_8);
+
+		// Extract exp and sub with lightweight parsing (no external JSON parser)
+		Long exp = extractLongValue(payloadJson, "\"exp\"");
+		if (exp == null) {
+			throw new IllegalArgumentException("Missing exp");
+		}
+		if (Instant.now().getEpochSecond() >= exp) {
+			throw new IllegalArgumentException("Token expired");
+		}
+		// sub can be quoted or number
+		String subStr = extractStringOrNumberValue(payloadJson, "\"sub\"");
+		if (subStr == null) {
+			throw new IllegalArgumentException("Missing sub");
+		}
+		try {
+			return Long.parseLong(subStr);
+		} catch (NumberFormatException e) {
+			throw new IllegalArgumentException("Invalid sub");
+		}
+	}
+
+	private static boolean constantTimeEquals(String a, String b) {
+		if (a == null || b == null) return false;
+		if (a.length() != b.length()) return false;
+		int result = 0;
+		for (int i = 0; i < a.length(); i++) {
+			result |= a.charAt(i) ^ b.charAt(i);
+		}
+		return result == 0;
+	}
+
 	private String createJwt(Map<String, Object> claims) {
 		String headerJson = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
 		String payloadJson = JsonUtil.toJson(claims);
@@ -105,6 +160,59 @@ public class TokenService {
 
 	private static String base64UrlEncode(byte[] bytes) {
 		return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+	}
+
+	private static byte[] base64UrlDecode(String value) {
+		return Base64.getUrlDecoder().decode(value);
+	}
+
+	/**
+	 * Extracts a long value for a given JSON key (very small helper; not a full JSON parser).
+	 * Accepts forms like: "key":123 or "key":"123"
+	 */
+	private static Long extractLongValue(String json, String keyWithQuotes) {
+		String value = extractStringOrNumberValue(json, keyWithQuotes);
+		if (value == null) return null;
+		try {
+			return Long.parseLong(value);
+		} catch (NumberFormatException e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Extracts a string of digits for a given key. If the JSON contains "key":"123" returns 123, if "key":123 returns 123.
+	 * Returns null if not found.
+	 */
+	private static String extractStringOrNumberValue(String json, String keyWithQuotes) {
+		int idx = json.indexOf(keyWithQuotes);
+		if (idx < 0) return null;
+		int colon = json.indexOf(':', idx + keyWithQuotes.length());
+		if (colon < 0) return null;
+		// Skip whitespace
+		int i = colon + 1;
+		while (i < json.length() && Character.isWhitespace(json.charAt(i))) i++;
+		if (i >= json.length()) return null;
+		char c = json.charAt(i);
+		if (c == '\"') {
+			// Read until next quote
+			int end = json.indexOf('\"', i + 1);
+			if (end < 0) return null;
+			return json.substring(i + 1, end);
+		} else {
+			// Read number token
+			int end = i;
+			while (end < json.length()) {
+				char ch = json.charAt(end);
+				if ((ch >= '0' && ch <= '9')) {
+					end++;
+				} else {
+					break;
+				}
+			}
+			if (end == i) return null;
+			return json.substring(i, end);
+		}
 	}
 
 	private static String generateSecureRandomToken() {

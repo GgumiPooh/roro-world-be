@@ -9,17 +9,26 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/activity")
+@RequestMapping("/api/public/activity")
 public class ActivityController {
     private final ActivityService activityService;
 
-    @GetMapping("/{year}")
-    public List<Activity> getActivities(@RequestParam(required = false) Integer year) {
-        if (year == null) {
-            return activityService.getAllActivities();
+    @GetMapping
+    public List<Activity> getActivities(
+            @RequestParam(name = "year", required = false) String yearParam,
+            @RequestParam(name = "sort", defaultValue = "latest") String sort) {
+        Integer year = null;
+        if (yearParam != null) {
+            String trimmed = yearParam.trim();
+            if (!trimmed.isEmpty()) {
+                try {
+                    year = Integer.parseInt(trimmed);
+                } catch (NumberFormatException ignored) {
+                    year = null;
+                }
+            }
         }
-        return activityService.getActivitiesStartingInYear(year);
+        return activityService.getActivitiesWithOrder(year, sort);
     }
 
-   
 }

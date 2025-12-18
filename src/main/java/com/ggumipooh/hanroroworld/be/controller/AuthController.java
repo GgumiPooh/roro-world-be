@@ -56,7 +56,7 @@ public class AuthController {
             }
             existing.setRevoked(true);
             refreshTokenRepository.save(existing);
-            var user = userRepository.findById(existing.getUserId()).orElse(null);
+			var user = userRepository.findById(java.util.Objects.requireNonNull(existing.getUserId())).orElse(null);
             if (user == null) {
                 response.setStatus(401);
                 return "user_not_found";
@@ -77,6 +77,30 @@ public class AuthController {
         CookieUtil.addHttpOnlyCookie(response, "refresh_token", "", 0, "/api/auth", true, "Strict");
         return "ok";
     }
+
+	@GetMapping("/name")
+	public Object currentUserName(HttpServletRequest request, HttpServletResponse response) {
+		String accessToken = readCookie(request, "access_token");
+		if (accessToken == null || accessToken.isBlank()) {
+			response.setStatus(401);
+			return "no_access_token";
+		}
+		try {
+			long userId = tokenService.verifyAndExtractUserId(accessToken);
+			var user = userRepository.findById(java.util.Objects.requireNonNull(Long.valueOf(userId))).orElse(null);
+			if (user == null) {
+				response.setStatus(401);
+				return "user_not_found";
+			}
+			return java.util.Map.of("name", user.getNickname());
+		} catch (IllegalArgumentException ex) {
+			response.setStatus(401);
+			return "invalid_or_expired_token";
+		} catch (Exception ex) {
+			response.setStatus(500);
+			return "failed_to_load_name";
+		}
+	}
 
     private static String readCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();

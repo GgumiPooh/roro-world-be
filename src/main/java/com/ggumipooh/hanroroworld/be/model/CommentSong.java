@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -18,6 +20,9 @@ public class CommentSong extends BaseEntity {
     @Column
     private String comment;
 
+    // @Column(name = "commented_at")
+    // private LocalDateTime commentedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "song_id")
     private Song song;
@@ -25,4 +30,9 @@ public class CommentSong extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    // @PrePersist
+    // public void prePersist() {
+    // this.commentedAt = LocalDateTime.now();
+    // }
 }

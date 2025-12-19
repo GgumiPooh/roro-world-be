@@ -31,7 +31,7 @@ public class AlbumController {
         return SongMapper.toDtoList(songService.getSongsByAlbum(albumId));
     }
 
-    @GetMapping("/songs/{songId}")
+    @GetMapping("/song/{songId}")
     public SongDto getSong(@PathVariable Long songId) {
         return SongMapper.toDto(songService.getById(songId));
     }

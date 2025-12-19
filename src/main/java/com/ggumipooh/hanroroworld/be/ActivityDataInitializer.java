@@ -26,7 +26,7 @@ public class ActivityDataInitializer implements CommandLineRunner {
     private final ObjectMapper objectMapper;
     private Boolean runActivity = false;
     private Boolean runAlbum = false;
-    private Boolean runSong = true;
+    private Boolean runSong = false;
 
     @Override
     public void run(String... args) throws Exception {

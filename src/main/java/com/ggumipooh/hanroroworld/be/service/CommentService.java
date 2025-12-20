@@ -42,7 +42,7 @@ public class CommentService {
 
         @Transactional(readOnly = true)
         public List<CommentDto> getCommentsBySong(Long songId) {
-                return commentSongRepository.findBySongIdOrderByCreatedAtDesc(songId)
+                return commentSongRepository.findBySongIdOrderByCommentedAtDesc(songId)
                                 .stream()
                                 .map(this::toDto)
                                 .collect(Collectors.toList());
@@ -67,9 +67,11 @@ public class CommentService {
                                 ? comment.getUser().getNickname()
                                 : "익명";
                 String createdAtStr = "";
-                if (comment.getCreatedAt() != null) {
-                        var d = comment.getCreatedAt();
-                        createdAtStr = String.format("%d.%02d.%02d", d.getYear(), d.getMonthValue(), d.getDayOfMonth());
+                if (comment.getCommentedAt() != null) {
+                        var d = comment.getCommentedAt();
+                        createdAtStr = String.format("%d.%02d.%02d %02d:%02d",
+                                d.getYear(), d.getMonthValue(), d.getDayOfMonth(),
+                                d.getHour(), d.getMinute());
                 }
 
                 return CommentDto.builder()

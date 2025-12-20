@@ -1,8 +1,8 @@
 package com.ggumipooh.hanroroworld.be.controller;
 
-import com.ggumipooh.hanroroworld.be.dto.CommentDto;
-import com.ggumipooh.hanroroworld.be.dto.CommentRequest;
-import com.ggumipooh.hanroroworld.be.service.CommentService;
+import com.ggumipooh.hanroroworld.be.dto.MessageDto;
+import com.ggumipooh.hanroroworld.be.dto.MessageRequest;
+import com.ggumipooh.hanroroworld.be.service.MessageService;
 import com.ggumipooh.hanroroworld.be.service.TokenService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,16 +14,15 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/public/song")
-public class CommentController {
+@RequestMapping("/api/public/message")
+public class MessageController {
 
-    private final CommentService commentService;
+    private final MessageService messageService;
     private final TokenService tokenService;
 
-    @PostMapping("/{songId}/comment")
-    public Object createComment(
-            @PathVariable Long songId,
-            @RequestBody CommentRequest request,
+    @PostMapping
+    public Object createMessage(
+            @RequestBody MessageRequest request,
             HttpServletRequest httpRequest,
             HttpServletResponse response) {
         String accessToken = readCookie(httpRequest, "access_token");
@@ -34,25 +33,25 @@ public class CommentController {
 
         try {
             Long userId = tokenService.verifyAndExtractUserId(accessToken);
-            CommentDto saved = commentService.createComment(songId, userId, request.getComment());
+            MessageDto saved = messageService.createMessage(userId, request.getComment());
             return saved;
         } catch (IllegalArgumentException ex) {
             response.setStatus(401);
             return "invalid_token";
         } catch (Exception ex) {
             response.setStatus(500);
-            return "failed_to_save_comment";
+            return "failed_to_save_message";
         }
     }
 
-    @GetMapping("/{songId}/comments")
-    public List<CommentDto> getComments(@PathVariable Long songId) {
-        return commentService.getCommentsBySong(songId);
+    @GetMapping
+    public List<MessageDto> getMessages() {
+        return messageService.getAllMessages();
     }
 
-    @DeleteMapping("/comment/{commentId}")
-    public Object deleteComment(
-            @PathVariable Long commentId,
+    @DeleteMapping("/{messageId}")
+    public Object deleteMessage(
+            @PathVariable Long messageId,
             HttpServletRequest httpRequest,
             HttpServletResponse response) {
         String accessToken = readCookie(httpRequest, "access_token");
@@ -63,7 +62,7 @@ public class CommentController {
 
         try {
             Long userId = tokenService.verifyAndExtractUserId(accessToken);
-            boolean deleted = commentService.deleteComment(commentId, userId);
+            boolean deleted = messageService.deleteMessage(messageId, userId);
             if (!deleted) {
                 response.setStatus(403);
                 return "not_allowed";
@@ -74,7 +73,7 @@ public class CommentController {
             return "invalid_token";
         } catch (Exception ex) {
             response.setStatus(500);
-            return "failed_to_delete_comment";
+            return "failed_to_delete_message";
         }
     }
 
@@ -89,3 +88,4 @@ public class CommentController {
         return null;
     }
 }
+

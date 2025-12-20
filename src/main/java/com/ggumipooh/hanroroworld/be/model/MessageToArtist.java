@@ -15,17 +15,16 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CommentSong extends BaseEntity {
+public class MessageToArtist extends BaseEntity {
 
-    @Column
-    private String comment;
+    @Column(columnDefinition = "TEXT")
+    private String message;
 
-    @Column(name = "commented_at")
-    private LocalDateTime commentedAt;
+    @Column(name = "author_name")
+    private String authorName;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "song_id")
-    private Song song;
+    @Column(name = "messaged_at")
+    private LocalDateTime messagedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -33,6 +32,7 @@ public class CommentSong extends BaseEntity {
 
     @PrePersist
     public void prePersist() {
-        this.commentedAt = LocalDateTime.now();
+        this.messagedAt = LocalDateTime.now();
     }
 }
+

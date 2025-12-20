@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface CommentSongRepository extends JpaRepository<CommentSong, Long> {
-    List<CommentSong> findBySongIdOrderByCreatedAtDesc(Long songId);
+    List<CommentSong> findBySongIdOrderByCommentedAtDesc(Long songId);
 }

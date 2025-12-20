@@ -1,10 +1,12 @@
 package com.ggumipooh.hanroroworld.be.controller;
 
+import com.ggumipooh.hanroroworld.be.dto.NicknameRequest;
 import com.ggumipooh.hanroroworld.be.repository.UserRepository;
 import com.ggumipooh.hanroroworld.be.repository.RefreshTokenRepository;
 import com.ggumipooh.hanroroworld.be.model.RefreshToken;
 import java.time.Instant;
 import com.ggumipooh.hanroroworld.be.service.TokenService;
+import org.springframework.transaction.annotation.Transactional;
 import com.ggumipooh.hanroroworld.be.util.CookieUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +23,7 @@ public class AuthController {
     private final TokenService tokenService;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+
     @GetMapping("/sign-in")
     public String signIn() {
         return "Hello World";
@@ -56,14 +59,17 @@ public class AuthController {
             }
             existing.setRevoked(true);
             refreshTokenRepository.save(existing);
-			var user = userRepository.findById(java.util.Objects.requireNonNull(existing.getUserId())).orElse(null);
+            var user = userRepository.findById(java.util.Objects.requireNonNull(existing.getUserId())).orElse(null);
             if (user == null) {
                 response.setStatus(401);
                 return "user_not_found";
             }
             var pair = tokenService.issueTokens(user);
-            CookieUtil.addHttpOnlyCookie(response, "access_token", pair.accessToken(), (int) (pair.accessExpiresAt().getEpochSecond() - Instant.now().getEpochSecond()), "/", true, "Lax");
-            CookieUtil.addHttpOnlyCookie(response, "refresh_token", pair.refreshToken(), (int) (pair.refreshExpiresAt().getEpochSecond() - Instant.now().getEpochSecond()), "/api/auth", true, "Strict");
+            CookieUtil.addHttpOnlyCookie(response, "access_token", pair.accessToken(),
+                    (int) (pair.accessExpiresAt().getEpochSecond() - Instant.now().getEpochSecond()), "/", true, "Lax");
+            CookieUtil.addHttpOnlyCookie(response, "refresh_token", pair.refreshToken(),
+                    (int) (pair.refreshExpiresAt().getEpochSecond() - Instant.now().getEpochSecond()), "/api/auth",
+                    true, "Strict");
             return "ok";
         } catch (Exception e) {
             response.setStatus(500);
@@ -78,35 +84,89 @@ public class AuthController {
         return "ok";
     }
 
-	@GetMapping("/name")
-	public Object currentUserName(HttpServletRequest request, HttpServletResponse response) {
-		String accessToken = readCookie(request, "access_token");
-		if (accessToken == null || accessToken.isBlank()) {
-			response.setStatus(401);
-			return "no_access_token";
-		}
-		try {
-			long userId = tokenService.verifyAndExtractUserId(accessToken);
-			var user = userRepository.findById(java.util.Objects.requireNonNull(Long.valueOf(userId))).orElse(null);
-			if (user == null) {
-				response.setStatus(401);
-				return "user_not_found";
-			}
-			return java.util.Map.of("name", user.getNickname());
-		} catch (IllegalArgumentException ex) {
-			response.setStatus(401);
-			return "invalid_or_expired_token";
-		} catch (Exception ex) {
-			response.setStatus(500);
-			return "failed_to_load_name";
-		}
-	}
+    @GetMapping("/name")
+    public Object currentUserName(HttpServletRequest request, HttpServletResponse response) {
+        String accessToken = readCookie(request, "access_token");
+        if (accessToken == null || accessToken.isBlank()) {
+            response.setStatus(401);
+            return "no_access_token";
+        }
+        try {
+            long userId = tokenService.verifyAndExtractUserId(accessToken);
+            var user = userRepository.findById(java.util.Objects.requireNonNull(Long.valueOf(userId))).orElse(null);
+            if (user == null) {
+                response.setStatus(401);
+                return "user_not_found";
+            }
+            return java.util.Map.of("name", user.getNickname());
+        } catch (IllegalArgumentException ex) {
+            response.setStatus(401);
+            return "invalid_or_expired_token";
+        } catch (Exception ex) {
+            response.setStatus(500);
+            return "failed_to_load_name";
+        }
+    }
+
+    @Transactional
+    @PutMapping("/nickname")
+    public Object updateNickname(
+            @RequestBody NicknameRequest request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse response) {
+        String accessToken = readCookie(httpRequest, "access_token");
+        if (accessToken == null || accessToken.isBlank()) {
+            response.setStatus(401);
+            return "no_access_token";
+        }
+        try {
+            long userId = tokenService.verifyAndExtractUserId(accessToken);
+            var user = userRepository.findById(Long.valueOf(userId)).orElse(null);
+            if (user == null) {
+                response.setStatus(401);
+                return "user_not_found";
+            }
+
+            String newNickname = request.getNickname();
+            if (newNickname == null || newNickname.trim().length() < 2) {
+                response.setStatus(400);
+                return "nickname_too_short";
+            }
+
+            String trimmedNickname = newNickname.trim();
+
+            // 현재 닉네임과 같으면 변경 없이 성공
+            if (trimmedNickname.equals(user.getNickname())) {
+                return java.util.Map.of("nickname", user.getNickname());
+            }
+
+            // 중복 체크
+            if (userRepository.existsByNickname(trimmedNickname)) {
+                response.setStatus(409);
+                return "nickname_already_exists";
+            }
+
+            user.setNickname(trimmedNickname);
+            userRepository.save(user);
+
+            return java.util.Map.of("nickname", user.getNickname());
+        } catch (IllegalArgumentException ex) {
+            response.setStatus(401);
+            return "invalid_or_expired_token";
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            response.setStatus(500);
+            return "failed_to_update_nickname: " + ex.getMessage();
+        }
+    }
 
     private static String readCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
-        if (cookies == null) return null;
+        if (cookies == null)
+            return null;
         for (Cookie c : cookies) {
-            if (name.equals(c.getName())) return c.getValue();
+            if (name.equals(c.getName()))
+                return c.getValue();
         }
         return null;
     }

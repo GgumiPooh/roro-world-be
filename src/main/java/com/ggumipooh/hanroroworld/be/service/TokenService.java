@@ -28,16 +28,17 @@ public class TokenService {
 	public TokenService(
 			RefreshTokenRepository refreshTokenRepository,
 			@Value("${app.jwt.secret:local-dev-secret-change-me}") String jwtSecret,
-			@Value("${app.jwt.accessTokenTtlSeconds:900}") int accessTtlSeconds,
-			@Value("${app.jwt.refreshTokenTtlSeconds:2592000}") int refreshTtlSeconds
-	) {
+			@Value("${app.jwt.accessTokenTtlSeconds:3600}") int accessTtlSeconds,
+			@Value("${app.jwt.refreshTokenTtlSeconds:2592000}") int refreshTtlSeconds) {
 		this.refreshTokenRepository = refreshTokenRepository;
 		this.jwtSecret = jwtSecret.getBytes(StandardCharsets.UTF_8);
 		this.accessTtlSeconds = accessTtlSeconds;
 		this.refreshTtlSeconds = refreshTtlSeconds;
 	}
 
-	public record TokenPair(String accessToken, String refreshToken, Instant accessExpiresAt, Instant refreshExpiresAt) {}
+	public record TokenPair(String accessToken, String refreshToken, Instant accessExpiresAt,
+			Instant refreshExpiresAt) {
+	}
 
 	public TokenPair issueTokens(User user) {
 		Instant now = Instant.now();
@@ -48,8 +49,7 @@ public class TokenService {
 				"sub", String.valueOf(user.getId()),
 				"nickname", user.getNickname() == null ? "" : user.getNickname(),
 				"iat", now.getEpochSecond(),
-				"exp", accessExp.getEpochSecond()
-		));
+				"exp", accessExp.getEpochSecond()));
 
 		String refreshPlain = generateSecureRandomToken();
 		String refreshHash = sha256Hex(refreshPlain);
@@ -77,13 +77,14 @@ public class TokenService {
 		// issue new pair
 		return issueTokens(user);
 	}
-	
+
 	public String hashRefreshToken(String refreshTokenPlain) {
 		return sha256Hex(refreshTokenPlain);
 	}
 
 	/**
-	 * Verifies the access JWT signature and expiration, then returns the subject (user id) as Long.
+	 * Verifies the access JWT signature and expiration, then returns the subject
+	 * (user id) as Long.
 	 * Throws IllegalArgumentException if invalid.
 	 */
 	public Long verifyAndExtractUserId(String jwt) {
@@ -128,8 +129,10 @@ public class TokenService {
 	}
 
 	private static boolean constantTimeEquals(String a, String b) {
-		if (a == null || b == null) return false;
-		if (a.length() != b.length()) return false;
+		if (a == null || b == null)
+			return false;
+		if (a.length() != b.length())
+			return false;
 		int result = 0;
 		for (int i = 0; i < a.length(); i++) {
 			result |= a.charAt(i) ^ b.charAt(i);
@@ -167,12 +170,14 @@ public class TokenService {
 	}
 
 	/**
-	 * Extracts a long value for a given JSON key (very small helper; not a full JSON parser).
+	 * Extracts a long value for a given JSON key (very small helper; not a full
+	 * JSON parser).
 	 * Accepts forms like: "key":123 or "key":"123"
 	 */
 	private static Long extractLongValue(String json, String keyWithQuotes) {
 		String value = extractStringOrNumberValue(json, keyWithQuotes);
-		if (value == null) return null;
+		if (value == null)
+			return null;
 		try {
 			return Long.parseLong(value);
 		} catch (NumberFormatException e) {
@@ -181,23 +186,29 @@ public class TokenService {
 	}
 
 	/**
-	 * Extracts a string of digits for a given key. If the JSON contains "key":"123" returns 123, if "key":123 returns 123.
+	 * Extracts a string of digits for a given key. If the JSON contains "key":"123"
+	 * returns 123, if "key":123 returns 123.
 	 * Returns null if not found.
 	 */
 	private static String extractStringOrNumberValue(String json, String keyWithQuotes) {
 		int idx = json.indexOf(keyWithQuotes);
-		if (idx < 0) return null;
+		if (idx < 0)
+			return null;
 		int colon = json.indexOf(':', idx + keyWithQuotes.length());
-		if (colon < 0) return null;
+		if (colon < 0)
+			return null;
 		// Skip whitespace
 		int i = colon + 1;
-		while (i < json.length() && Character.isWhitespace(json.charAt(i))) i++;
-		if (i >= json.length()) return null;
+		while (i < json.length() && Character.isWhitespace(json.charAt(i)))
+			i++;
+		if (i >= json.length())
+			return null;
 		char c = json.charAt(i);
 		if (c == '\"') {
 			// Read until next quote
 			int end = json.indexOf('\"', i + 1);
-			if (end < 0) return null;
+			if (end < 0)
+				return null;
 			return json.substring(i + 1, end);
 		} else {
 			// Read number token
@@ -210,7 +221,8 @@ public class TokenService {
 					break;
 				}
 			}
-			if (end == i) return null;
+			if (end == i)
+				return null;
 			return json.substring(i, end);
 		}
 	}
@@ -238,7 +250,8 @@ public class TokenService {
 			sb.append("{");
 			boolean first = true;
 			for (Map.Entry<String, Object> e : map.entrySet()) {
-				if (!first) sb.append(",");
+				if (!first)
+					sb.append(",");
 				first = false;
 				sb.append("\"").append(escape(e.getKey())).append("\":");
 				Object v = e.getValue();
@@ -259,5 +272,3 @@ public class TokenService {
 		}
 	}
 }
-
-

@@ -8,7 +8,7 @@ build/
 ### STS ###
 .apt_generated
 .classpath
-.factorypath
+.actorypath
 .project
 .settings
 .springBeans
@@ -37,5 +37,5 @@ out/
 .vscode/
 
 /src/main/resources/application.properties
-
+/src/main/java/com/ggumipooh/hanroroworld/be/ActivityDataInitializer.java
 .env

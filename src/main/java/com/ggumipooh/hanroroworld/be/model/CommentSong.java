@@ -10,6 +10,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "song_comments")
 @Getter
 @Setter
 @NoArgsConstructor

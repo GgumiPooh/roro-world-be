@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "albums")
 @Setter
 @Getter
 public class Album extends BaseEntity {

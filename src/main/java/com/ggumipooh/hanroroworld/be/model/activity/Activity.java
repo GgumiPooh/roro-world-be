@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Entity
+@Table(name = "activities")
 @Setter
 @Getter
 public class Activity extends BaseEntity {

@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @Entity
-@Table(name = "song")
+@Table(name = "songs")
 @Getter
 @Setter
 public class Song extends BaseEntity {

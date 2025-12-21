@@ -20,6 +20,9 @@ public class SecurityConfig {
         private final TokenService tokenService;
         private final UserRepository userRepository;
 
+        @org.springframework.beans.factory.annotation.Value("${app.frontend.url:http://localhost:5173}")
+        private String frontendUrl;
+
         public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, TokenService tokenService,
                         UserRepository userRepository) {
                 this.customOAuth2UserService = customOAuth2UserService;
@@ -76,11 +79,11 @@ public class SecurityConfig {
                                                                                                                 .getEpochSecond()),
                                                                                 "/api/auth", true, "Strict");
                                                         }
-                                                        res.sendRedirect("http://localhost:5173");
+                                                        res.sendRedirect(frontendUrl);
                                                 })
                                                 .failureHandler((req, res, ex) -> {
                                                         ex.printStackTrace();
-                                                        res.sendRedirect("http://localhost:5173/login?oauth2_error=" +
+                                                        res.sendRedirect(frontendUrl + "/login?oauth2_error=" +
                                                                         java.net.URLEncoder.encode(ex.getMessage(),
                                                                                         java.nio.charset.StandardCharsets.UTF_8));
                                                 }));

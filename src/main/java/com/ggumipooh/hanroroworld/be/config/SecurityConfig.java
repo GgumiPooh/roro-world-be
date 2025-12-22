@@ -69,7 +69,7 @@ public class SecurityConfig {
                                                                                                 - java.time.Instant
                                                                                                                 .now()
                                                                                                                 .getEpochSecond()),
-                                                                                "/", true, "Lax");
+                                                                                "/", true, "None");
                                                                 CookieUtil.addHttpOnlyCookie(res, "refresh_token",
                                                                                 pair.refreshToken(),
                                                                                 (int) (pair.refreshExpiresAt()
@@ -77,7 +77,7 @@ public class SecurityConfig {
                                                                                                 - java.time.Instant
                                                                                                                 .now()
                                                                                                                 .getEpochSecond()),
-                                                                                "/api/auth", true, "Strict");
+                                                                                "/api/auth", true, "None");
                                                         }
                                                         res.sendRedirect(frontendUrl);
                                                 })

@@ -66,10 +66,13 @@ public class AuthController {
             }
             var pair = tokenService.issueTokens(user);
             CookieUtil.addHttpOnlyCookie(response, "access_token", pair.accessToken(),
-                    (int) (pair.accessExpiresAt().getEpochSecond() - Instant.now().getEpochSecond()), "/", true, "Lax");
+                    (int) (pair.accessExpiresAt().getEpochSecond() - Instant.now().getEpochSecond()), "/", true,
+                    "None");
+            // 로컬 개발 환경에서는 Lax
             CookieUtil.addHttpOnlyCookie(response, "refresh_token", pair.refreshToken(),
                     (int) (pair.refreshExpiresAt().getEpochSecond() - Instant.now().getEpochSecond()), "/api/auth",
-                    true, "Strict");
+                    true, "None");
+            // 로컬 개발 환경에서는 Strict
             return "ok";
         } catch (Exception e) {
             response.setStatus(500);
@@ -79,8 +82,10 @@ public class AuthController {
 
     @PostMapping("/logout")
     public Object logout(HttpServletResponse response) {
-        CookieUtil.addHttpOnlyCookie(response, "access_token", "", 0, "/", true, "Lax");
-        CookieUtil.addHttpOnlyCookie(response, "refresh_token", "", 0, "/api/auth", true, "Strict");
+        CookieUtil.addHttpOnlyCookie(response, "access_token", "", 0, "/", true, "None");
+        // 로컬 개발 환경에서는 Lax
+        CookieUtil.addHttpOnlyCookie(response, "refresh_token", "", 0, "/api/auth", true, "None");
+        // 로컬 개발 환경에서는 Strict
         return "ok";
     }
 

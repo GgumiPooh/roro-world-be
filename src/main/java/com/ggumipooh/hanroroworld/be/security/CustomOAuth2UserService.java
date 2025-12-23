@@ -55,7 +55,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 			if (userRepository.findByProviderAndProviderId(registrationId, providerUserId).isEmpty()) {
 				userRepository.save(Objects.requireNonNull(
 						User.builder()
-								.nickname(nicknameToSave)
+								.name(nicknameToSave)
 								.provider(registrationId)
 								.providerId(providerUserId)
 								.build()));

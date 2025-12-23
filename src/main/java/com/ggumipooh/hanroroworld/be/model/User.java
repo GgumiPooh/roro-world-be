@@ -17,6 +17,10 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class User extends BaseEntity {
+
+    @Column
+    private String name;
+
     @Column(unique = true)
     private String nickname;
 

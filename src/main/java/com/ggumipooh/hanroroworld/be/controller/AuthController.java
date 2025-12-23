@@ -103,7 +103,7 @@ public class AuthController {
                 response.setStatus(401);
                 return "user_not_found";
             }
-            return java.util.Map.of("name", user.getNickname());
+            return java.util.Map.of("name", user.getNickname() != null ? user.getNickname() : user.getName());
         } catch (IllegalArgumentException ex) {
             response.setStatus(401);
             return "invalid_or_expired_token";
@@ -151,10 +151,10 @@ public class AuthController {
                 return "nickname_already_exists";
             }
 
-            user.setNickname(trimmedNickname);
+            user.setName(trimmedNickname);
             userRepository.save(user);
 
-            return java.util.Map.of("nickname", user.getNickname());
+            return java.util.Map.of("name", user.getName());
         } catch (IllegalArgumentException ex) {
             response.setStatus(401);
             return "invalid_or_expired_token";

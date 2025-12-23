@@ -1,10 +1,11 @@
 package com.ggumipooh.hanroroworld.be.config;
 
-import com.ggumipooh.hanroroworld.be.security.CustomOAuth2UserService;
-import com.ggumipooh.hanroroworld.be.service.TokenService;
-import com.ggumipooh.hanroroworld.be.util.CookieUtil;
 import com.ggumipooh.hanroroworld.be.model.User;
 import com.ggumipooh.hanroroworld.be.repository.UserRepository;
+import com.ggumipooh.hanroroworld.be.security.CustomOAuth2UserService;
+import com.ggumipooh.hanroroworld.be.security.HttpCookieOAuth2AuthorizationRequestRepository;
+import com.ggumipooh.hanroroworld.be.service.TokenService;
+import com.ggumipooh.hanroroworld.be.util.CookieUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -19,15 +20,19 @@ public class SecurityConfig {
         private final CustomOAuth2UserService customOAuth2UserService;
         private final TokenService tokenService;
         private final UserRepository userRepository;
+        private final HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository;
 
         @org.springframework.beans.factory.annotation.Value("${app.frontend.url:http://localhost:5173}")
         private String frontendUrl;
 
-        public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, TokenService tokenService,
-                        UserRepository userRepository) {
+        public SecurityConfig(CustomOAuth2UserService customOAuth2UserService,
+                        TokenService tokenService,
+                        UserRepository userRepository,
+                        HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository) {
                 this.customOAuth2UserService = customOAuth2UserService;
                 this.tokenService = tokenService;
                 this.userRepository = userRepository;
+                this.cookieAuthorizationRequestRepository = cookieAuthorizationRequestRepository;
         }
 
         @Bean
@@ -46,7 +51,10 @@ public class SecurityConfig {
                                                 .permitAll()
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth -> oauth
-                                                .authorizationEndpoint(ae -> ae.baseUri("/oauth2/authorization"))
+                                                .authorizationEndpoint(ae -> ae
+                                                                .baseUri("/oauth2/authorization")
+                                                                .authorizationRequestRepository(
+                                                                                cookieAuthorizationRequestRepository))
                                                 .redirectionEndpoint(redir -> redir.baseUri("/login/oauth2/code/*"))
                                                 .userInfoEndpoint(cfg -> cfg.userService(customOAuth2UserService))
                                                 .successHandler((req, res, auth) -> {

@@ -37,7 +37,7 @@
   },
   {
     "publishedAt" : "2022-06-18",
-    "type" : "DIGITAL_SINGLE",
+    "type" : "EP",
     "title" : [
       {"language" : "kor", "content" :  "디지털 싱글 <거울>"},
       {"language" : "eng", "content" :  "Digital single 〈Mirror〉"}
@@ -51,6 +51,24 @@
     [
       {"type" : "img", "url" : "https://github.com/GgumiPooh/assets/blob/main/images/album/%EA%B1%B0%EC%9A%B8%EC%95%A8%EB%B2%94.png?raw=true"},
       {"type" :  "video", "url" : "https://www.youtube.com/watch?time_continue=2&v=_TnsZ71zaxU&embeds_referring_euri=https%3A%2F%2Fnamu.wiki%2F&source_ve_path=MjM4NTE"}
+    ]
+  },
+  {
+    "publishedAt" : "2024-05-28",
+    "type" : "DIGITAL_SINGLE",
+    "title" : [
+      {"language" : "kor", "content" :  "2nd EP <집>"},
+      {"language" : "eng", "content" :  "2nd EP album 〈Home〉"}
+    ],
+    "description" :
+    [
+      {"language" : "kor", "content" :  "꿈만 같던 비행을 마치고 돌아온 이곳은 나의 집. 구름 사이서 태어난 꿈을 감히 키워내야만 하는 우리들의 집. 나는 분명 혼자가 아님에도 혼자다. 숨은 눈빛들이 온전히 나에게로 꽂힐 때쯤, 또 한 번의 방화가 시작되고. 그렇게 나는 또 하나의 타기 좋은 땔감이 되어가고...\n어서오세요.\n미움이라는 짐은 저기 내려두고 리모델링된 집부터 둘러보시죠."},
+      {"language" : "eng", "content" :  "The place I returned after finally landing my dream. We have to raise the dream born between the clouds. I am not alone, even though I am alone. When the hidden eyes finally hit me, another fire starts. So I become another good target. \nWelcome. \nLeave the burden of hate there and let's take a look around the remodeled house."}
+    ],
+    "metaData" :
+    [
+      {"type" : "img", "url" : "https://github.com/GgumiPooh/assets/blob/main/images/album/%EC%A7%91%EC%95%A8%EB%B2%94.png?raw=true"},
+      {"type" :  "video", "url" : ""}
     ]
   }
 ]

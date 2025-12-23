@@ -70,8 +70,8 @@ public class CommentService {
                 if (comment.getCommentedAt() != null) {
                         var d = comment.getCommentedAt();
                         createdAtStr = String.format("%d.%02d.%02d %02d:%02d",
-                                d.getYear(), d.getMonthValue(), d.getDayOfMonth(),
-                                d.getHour(), d.getMinute());
+                                        d.getYear(), d.getMonthValue(), d.getDayOfMonth(),
+                                        d.getHour(), d.getMinute());
                 }
 
                 return CommentDto.builder()

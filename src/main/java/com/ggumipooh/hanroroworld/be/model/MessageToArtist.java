@@ -20,9 +20,6 @@ public class MessageToArtist extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String message;
 
-    @Column(name = "author_name")
-    private String authorName;
-
     @Column(name = "messaged_at")
     private LocalDateTime messagedAt;
 
@@ -35,4 +32,3 @@ public class MessageToArtist extends BaseEntity {
         this.messagedAt = LocalDateTime.now();
     }
 }
-

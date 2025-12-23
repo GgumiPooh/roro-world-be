@@ -26,7 +26,6 @@ public class MessageService {
 
         MessageToArtist message = MessageToArtist.builder()
                 .message(content)
-                .authorName(user.getNickname())
                 .user(user)
                 .build();
 
@@ -56,7 +55,9 @@ public class MessageService {
     }
 
     private MessageDto toDto(MessageToArtist message) {
-        String authorName = message.getAuthorName() != null ? message.getAuthorName() : "익명";
+        String authorName = message.getUser() != null && message.getUser().getNickname() != null
+                ? message.getUser().getNickname()
+                : "익명";
         String createdAtStr = "";
         if (message.getMessagedAt() != null) {
             var d = message.getMessagedAt();
@@ -73,4 +74,3 @@ public class MessageService {
                 .build();
     }
 }
-

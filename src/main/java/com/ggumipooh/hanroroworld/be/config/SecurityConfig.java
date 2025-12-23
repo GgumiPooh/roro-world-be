@@ -1,15 +1,17 @@
 package com.ggumipooh.hanroroworld.be.config;
 
+import com.ggumipooh.hanroroworld.be.model.User;
+import com.ggumipooh.hanroroworld.be.repository.UserRepository;
 import com.ggumipooh.hanroroworld.be.security.CustomOAuth2UserService;
 import com.ggumipooh.hanroroworld.be.service.TokenService;
 import com.ggumipooh.hanroroworld.be.util.CookieUtil;
-import com.ggumipooh.hanroroworld.be.model.User;
-import com.ggumipooh.hanroroworld.be.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -19,15 +21,19 @@ public class SecurityConfig {
         private final CustomOAuth2UserService customOAuth2UserService;
         private final TokenService tokenService;
         private final UserRepository userRepository;
+        private final OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient;
 
         @org.springframework.beans.factory.annotation.Value("${app.frontend.url:http://localhost:5173}")
         private String frontendUrl;
 
-        public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, TokenService tokenService,
-                        UserRepository userRepository) {
+        public SecurityConfig(CustomOAuth2UserService customOAuth2UserService,
+                        TokenService tokenService,
+                        UserRepository userRepository,
+                        OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient) {
                 this.customOAuth2UserService = customOAuth2UserService;
                 this.tokenService = tokenService;
                 this.userRepository = userRepository;
+                this.accessTokenResponseClient = accessTokenResponseClient;
         }
 
         @Bean
@@ -47,6 +53,8 @@ public class SecurityConfig {
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth -> oauth
                                                 .authorizationEndpoint(ae -> ae.baseUri("/oauth2/authorization"))
+                                                .tokenEndpoint(token -> token
+                                                                .accessTokenResponseClient(accessTokenResponseClient))
                                                 .redirectionEndpoint(redir -> redir.baseUri("/login/oauth2/code/*"))
                                                 .userInfoEndpoint(cfg -> cfg.userService(customOAuth2UserService))
                                                 .successHandler((req, res, auth) -> {

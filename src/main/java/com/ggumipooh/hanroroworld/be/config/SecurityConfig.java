@@ -87,7 +87,17 @@ public class SecurityConfig {
                                                                                                                 .getEpochSecond()),
                                                                                 "/api/auth", true, "None");
                                                         }
-                                                        res.sendRedirect(frontendUrl);
+                                                        // 신규 유저면 동의 페이지로, 기존 유저면 홈으로
+                                                        Object isNewUserAttr = auth
+                                                                        .getPrincipal() instanceof org.springframework.security.oauth2.core.user.OAuth2User oauth2User
+                                                                                        ? oauth2User.getAttributes()
+                                                                                                        .get("isNewUser")
+                                                                                        : null;
+                                                        boolean isNewUser = Boolean.TRUE.equals(isNewUserAttr);
+                                                        String redirectUrl = isNewUser
+                                                                        ? frontendUrl + "/signup-complete"
+                                                                        : frontendUrl + "/";
+                                                        res.sendRedirect(redirectUrl);
                                                 })
                                                 .failureHandler((req, res, ex) -> {
                                                         ex.printStackTrace();

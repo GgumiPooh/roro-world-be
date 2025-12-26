@@ -52,7 +52,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 			final String nicknameToSave = (displayName == null || displayName.isBlank())
 					? ("naver_" + providerUserId)
 					: displayName;
-			if (userRepository.findByProviderAndProviderId(registrationId, providerUserId).isEmpty()) {
+			boolean isNewUser = userRepository.findByProviderAndProviderId(registrationId, providerUserId).isEmpty();
+			if (isNewUser) {
 				userRepository.save(Objects.requireNonNull(
 						User.builder()
 								.name(nicknameToSave)
@@ -66,6 +67,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 			normalized.put("id", providerUserId);
 			normalized.put("response", providerUserId);
 			normalized.put("name", nicknameToSave);
+			normalized.put("isNewUser", isNewUser);
 
 			Collection<GrantedAuthority> authorities = Collections
 					.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
@@ -107,7 +109,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 			final String nicknameToSave = (nickname == null || nickname.isBlank())
 					? ("kakao_" + providerUserId)
 					: nickname;
-			if (userRepository.findByProviderAndProviderId(registrationId, providerUserId).isEmpty()) {
+			boolean isNewUser = userRepository.findByProviderAndProviderId(registrationId, providerUserId).isEmpty();
+			if (isNewUser) {
 				userRepository.save(Objects.requireNonNull(
 						User.builder()
 								.nickname(nicknameToSave)
@@ -119,6 +122,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 			Map<String, Object> normalized = new HashMap<>();
 			normalized.put("id", providerUserId);
 			normalized.put("name", nicknameToSave);
+			normalized.put("isNewUser", isNewUser);
 
 			Collection<GrantedAuthority> authorities = Collections
 					.singletonList(new SimpleGrantedAuthority("ROLE_USER"));

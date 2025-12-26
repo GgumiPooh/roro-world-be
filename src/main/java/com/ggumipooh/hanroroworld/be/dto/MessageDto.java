@@ -7,7 +7,7 @@ import lombok.Getter;
 @Builder
 public class MessageDto {
     private Long id;
-    private String message;
+    private String content;
     private String author;
     private String createdAt;
 }

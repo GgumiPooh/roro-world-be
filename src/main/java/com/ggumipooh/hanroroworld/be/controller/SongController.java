@@ -34,7 +34,7 @@ public class SongController {
 
         try {
             Long userId = tokenService.verifyAndExtractUserId(accessToken);
-            CommentDto saved = commentService.createComment(songId, userId, request.getComment());
+            CommentDto saved = commentService.createComment(songId, userId, request.getContent());
             return saved;
         } catch (IllegalArgumentException ex) {
             response.setStatus(401);

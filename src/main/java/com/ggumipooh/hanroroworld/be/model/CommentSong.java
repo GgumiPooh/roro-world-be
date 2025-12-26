@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 public class CommentSong extends BaseEntity {
 
     @Column
-    private String comment;
+    private String content;
 
     @Column(name = "commented_at")
     private LocalDateTime commentedAt;

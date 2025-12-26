@@ -25,7 +25,7 @@ public class MessageService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
         MessageToArtist message = MessageToArtist.builder()
-                .message(content)
+                .content(content)
                 .user(user)
                 .build();
 
@@ -69,7 +69,7 @@ public class MessageService {
 
         return MessageDto.builder()
                 .id(message.getId())
-                .message(message.getMessage())
+                .content(message.getContent())
                 .author(authorName)
                 .createdAt(createdAtStr)
                 .build();

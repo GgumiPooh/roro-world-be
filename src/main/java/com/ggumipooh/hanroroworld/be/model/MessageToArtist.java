@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 public class MessageToArtist extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
-    private String message;
+    private String content;
 
     @Column(name = "messaged_at")
     private LocalDateTime messagedAt;

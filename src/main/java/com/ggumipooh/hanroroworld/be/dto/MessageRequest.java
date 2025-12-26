@@ -6,6 +6,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class MessageRequest {
-    private String comment;
+    private String content;
 }
-

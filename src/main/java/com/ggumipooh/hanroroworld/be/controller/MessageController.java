@@ -33,7 +33,7 @@ public class MessageController {
 
         try {
             Long userId = tokenService.verifyAndExtractUserId(accessToken);
-            MessageDto saved = messageService.createMessage(userId, request.getComment());
+            MessageDto saved = messageService.createMessage(userId, request.getContent());
             return saved;
         } catch (IllegalArgumentException ex) {
             response.setStatus(401);
@@ -88,4 +88,3 @@ public class MessageController {
         return null;
     }
 }
-

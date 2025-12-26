@@ -30,7 +30,7 @@ public class CommentService {
                                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
                 CommentSong comment = CommentSong.builder()
-                                .comment(content)
+                                .content(content)
                                 .song(song)
                                 .user(user)
                                 .build();
@@ -77,7 +77,7 @@ public class CommentService {
 
                 return CommentDto.builder()
                                 .id(comment.getId())
-                                .comment(comment.getComment())
+                                .content(comment.getContent())
                                 .author(authorName)
                                 .createdAt(createdAtStr)
                                 .build();

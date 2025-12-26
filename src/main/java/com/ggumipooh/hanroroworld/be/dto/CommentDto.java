@@ -9,7 +9,7 @@ import lombok.Getter;
 @Builder
 public class CommentDto {
     private Long id;
-    private String comment;
+    private String content;
     private String author;
     private String createdAt;
 }

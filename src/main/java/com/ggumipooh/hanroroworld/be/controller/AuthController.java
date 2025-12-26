@@ -114,6 +114,40 @@ public class AuthController {
     }
 
     @Transactional
+    @DeleteMapping("/delete")
+    public Object deleteAccount(HttpServletRequest request, HttpServletResponse response) {
+        String accessToken = readCookie(request, "access_token");
+        if (accessToken == null || accessToken.isBlank()) {
+            response.setStatus(401);
+            return "no_access_token";
+        }
+        try {
+            long userId = tokenService.verifyAndExtractUserId(accessToken);
+            var user = userRepository.findById(Long.valueOf(userId)).orElse(null);
+            if (user == null) {
+                response.setStatus(401);
+                return "user_not_found";
+            }
+
+            // Hard delete - 개인정보 완전 삭제
+            userRepository.delete(user);
+
+            // 쿠키 삭제 (로그아웃 처리)
+            CookieUtil.addHttpOnlyCookie(response, "access_token", "", 0, "/", true, "None");
+            CookieUtil.addHttpOnlyCookie(response, "refresh_token", "", 0, "/api/auth", true, "None");
+
+            return "ok";
+        } catch (IllegalArgumentException ex) {
+            response.setStatus(401);
+            return "invalid_or_expired_token";
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            response.setStatus(500);
+            return "failed_to_delete_account: " + ex.getMessage();
+        }
+    }
+
+    @Transactional
     @PutMapping("/nickname")
     public Object updateNickname(
             @RequestBody NicknameRequest request,

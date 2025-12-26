@@ -50,7 +50,8 @@ public class MessageService {
         if (message.getUser() == null || !message.getUser().getId().equals(userId)) {
             return false;
         }
-        messageRepository.delete(message);
+        message.softDelete();
+        messageRepository.save(message);
         return true;
     }
 

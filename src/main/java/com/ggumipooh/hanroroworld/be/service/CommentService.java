@@ -58,7 +58,8 @@ public class CommentService {
                 if (comment.getUser() == null || !comment.getUser().getId().equals(userId)) {
                         return false;
                 }
-                commentSongRepository.delete(comment);
+                comment.softDelete();
+                commentSongRepository.save(comment);
                 return true;
         }
 

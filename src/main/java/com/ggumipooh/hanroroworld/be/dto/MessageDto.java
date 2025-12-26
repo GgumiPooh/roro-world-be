@@ -11,4 +11,3 @@ public class MessageDto {
     private String author;
     private String createdAt;
 }
-

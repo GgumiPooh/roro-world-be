@@ -185,10 +185,10 @@ public class AuthController {
                 return "nickname_already_exists";
             }
 
-            user.setName(trimmedNickname);
+            user.setNickname(trimmedNickname);
             userRepository.save(user);
 
-            return java.util.Map.of("name", user.getName());
+            return java.util.Map.of("nickname", user.getNickname());
         } catch (IllegalArgumentException ex) {
             response.setStatus(401);
             return "invalid_or_expired_token";

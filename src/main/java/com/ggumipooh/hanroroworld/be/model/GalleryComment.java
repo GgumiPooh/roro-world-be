@@ -6,23 +6,27 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
-@Table(name = "gallery_images")
+@Table(name = "gallery_comments")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class GalleryImage extends BaseEntity {
+@SQLRestriction("deleted_at IS NULL")
+public class GalleryComment extends BaseEntity {
 
-    @Column(name = "image_url", nullable = false, columnDefinition = "TEXT")
-    private String imageUrl;
-
-    @Column(name = "display_order", nullable = false)
-    private Integer displayOrder;
+    @Column(nullable = false, length = 1000)
+    private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "gallery_id", nullable = false)
     private Gallery gallery;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }
+

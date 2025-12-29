@@ -1,0 +1,160 @@
+package com.ggumipooh.hanroroworld.be.service;
+
+import com.ggumipooh.hanroroworld.be.model.Gallery;
+import com.ggumipooh.hanroroworld.be.model.GalleryComment;
+import com.ggumipooh.hanroroworld.be.model.GalleryImage;
+import com.ggumipooh.hanroroworld.be.model.GalleryLike;
+import com.ggumipooh.hanroroworld.be.model.User;
+import com.ggumipooh.hanroroworld.be.repository.GalleryCommentRepository;
+import com.ggumipooh.hanroroworld.be.repository.GalleryLikeRepository;
+import com.ggumipooh.hanroroworld.be.repository.GalleryRepository;
+import com.ggumipooh.hanroroworld.be.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+public class GalleryService {
+
+    private final GalleryRepository galleryRepository;
+    private final GalleryCommentRepository commentRepository;
+    private final GalleryLikeRepository likeRepository;
+    private final UserRepository userRepository;
+
+    @Transactional(readOnly = true)
+    public Page<Gallery> getGalleries(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return galleryRepository.findAllByOrderByCreatedAtDesc(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Gallery> searchGalleries(String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return galleryRepository.searchByTitle(keyword, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Gallery> getById(Long id) {
+        return galleryRepository.findById(id);
+    }
+
+    @Transactional
+    public Gallery save(Gallery gallery) {
+        return galleryRepository.save(gallery);
+    }
+
+    @Transactional
+    public Gallery createGallery(Long userId, String title, String description, List<String> imageUrls) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Gallery gallery = Gallery.builder()
+                .title(title)
+                .description(description)
+                .user(user)
+                .build();
+
+        // 이미지 추가
+        for (int i = 0; i < imageUrls.size(); i++) {
+            GalleryImage image = GalleryImage.builder()
+                    .imageUrl(imageUrls.get(i))
+                    .displayOrder(i)
+                    .build();
+            gallery.addImage(image);
+        }
+
+        return galleryRepository.save(gallery);
+    }
+
+    @Transactional
+    public void incrementViewCount(Long id) {
+        galleryRepository.findById(id).ifPresent(gallery -> {
+            gallery.incrementViewCount();
+            galleryRepository.save(gallery);
+        });
+    }
+
+    // ===== 좋아요 기능 =====
+
+    @Transactional(readOnly = true)
+    public boolean isLikedByUser(Long galleryId, Long userId) {
+        if (userId == null)
+            return false;
+        return likeRepository.existsByGalleryIdAndUserId(galleryId, userId);
+    }
+
+    @Transactional
+    public boolean toggleLike(Long galleryId, Long userId) {
+        Gallery gallery = galleryRepository.findById(galleryId)
+                .orElseThrow(() -> new IllegalArgumentException("Gallery not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Optional<GalleryLike> existingLike = likeRepository.findByGalleryIdAndUserId(galleryId, userId);
+
+        if (existingLike.isPresent()) {
+            // 이미 좋아요 -> 취소
+            likeRepository.delete(existingLike.get());
+            gallery.decrementLikeCount();
+            galleryRepository.save(gallery);
+            return false; // 좋아요 취소됨
+        } else {
+            // 좋아요 추가
+            GalleryLike like = GalleryLike.builder()
+                    .gallery(gallery)
+                    .user(user)
+                    .build();
+            likeRepository.save(like);
+            gallery.incrementLikeCount();
+            galleryRepository.save(gallery);
+            return true; // 좋아요 됨
+        }
+    }
+
+    // ===== 댓글 기능 =====
+
+    @Transactional(readOnly = true)
+    public List<GalleryComment> getComments(Long galleryId) {
+        return commentRepository.findByGalleryIdOrderByCreatedAtDesc(galleryId);
+    }
+
+    @Transactional(readOnly = true)
+    public long getCommentCount(Long galleryId) {
+        return commentRepository.countByGalleryId(galleryId);
+    }
+
+    @Transactional
+    public GalleryComment addComment(Long galleryId, Long userId, String content) {
+        Gallery gallery = galleryRepository.findById(galleryId)
+                .orElseThrow(() -> new IllegalArgumentException("Gallery not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        GalleryComment comment = GalleryComment.builder()
+                .content(content)
+                .gallery(gallery)
+                .user(user)
+                .build();
+
+        return commentRepository.save(comment);
+    }
+
+    @Transactional
+    public void deleteComment(Long commentId, Long userId) {
+        GalleryComment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
+
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("Not authorized to delete this comment");
+        }
+
+        commentRepository.delete(comment);
+    }
+}

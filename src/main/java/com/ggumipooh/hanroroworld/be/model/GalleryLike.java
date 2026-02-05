@@ -9,7 +9,7 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "gallery_likes", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"gallery_id", "user_id"})
+        @UniqueConstraint(columnNames = { "gallery_id", "user_id" })
 })
 @Getter
 @Setter
@@ -26,4 +26,3 @@ public class GalleryLike extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 }
-

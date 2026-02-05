@@ -6,6 +6,7 @@ import com.ggumipooh.hanroroworld.be.dto.GalleryDto;
 import com.ggumipooh.hanroroworld.be.model.Gallery;
 import com.ggumipooh.hanroroworld.be.model.GalleryComment;
 import com.ggumipooh.hanroroworld.be.model.GalleryImage;
+import com.ggumipooh.hanroroworld.be.model.User;
 
 import java.util.Comparator;
 import java.util.List;
@@ -93,5 +94,27 @@ public final class GalleryMapper {
                         .map(GalleryMapper::toDto)
                         .toList();
     }
-}
 
+    public static Gallery toEntity(GalleryDto dto, User user) {
+        if (dto == null || user == null)
+            return null;
+
+        Gallery gallery = Gallery.builder()
+                .title(dto.getTitle())
+                .description(dto.getDescription())
+                .user(user)
+                .build();
+
+        if (dto.getImageUrls() != null && !dto.getImageUrls().isEmpty()) {
+            for (int i = 0; i < dto.getImageUrls().size(); i++) {
+                GalleryImage image = GalleryImage.builder()
+                        .imageUrl(dto.getImageUrls().get(i))
+                        .displayOrder(i)
+                        .build();
+                gallery.addImage(image);
+            }
+        }
+
+        return gallery;
+    }
+}

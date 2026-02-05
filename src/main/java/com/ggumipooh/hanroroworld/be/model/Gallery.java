@@ -1,12 +1,7 @@
 package com.ggumipooh.hanroroworld.be.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.hibernate.annotations.SQLRestriction;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,34 +13,30 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@SQLRestriction("deleted_at IS NULL")
 public class Gallery extends BaseEntity {
 
     @Column(nullable = false)
     private String title;
 
-    @Column(length = 2000)
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Builder.Default
     @OneToMany(mappedBy = "gallery", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("displayOrder ASC")
+    @Builder.Default
     private List<GalleryImage> images = new ArrayList<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "gallery", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<GalleryLike> likes = new ArrayList<>();
-
-    @Builder.Default
-    @Column(name = "like_count", nullable = false)
-    private Integer likeCount = 0;
-
-    @Builder.Default
-    @Column(name = "view_count", nullable = false)
+    @Column(name = "view_count")
     private Integer viewCount = 0;
+
+    @Builder.Default
+    @Column(name = "like_count")
+    private Integer likeCount = 0;
 
     public void addImage(GalleryImage image) {
         images.add(image);
@@ -55,6 +46,10 @@ public class Gallery extends BaseEntity {
     public void removeImage(GalleryImage image) {
         images.remove(image);
         image.setGallery(null);
+    }
+
+    public void incrementViewCount() {
+        this.viewCount++;
     }
 
     public void incrementLikeCount() {
@@ -67,8 +62,8 @@ public class Gallery extends BaseEntity {
         }
     }
 
-    public void incrementViewCount() {
-        this.viewCount++;
+    public String getAuthorName() {
+        if (user == null) return "Unknown";
+        return user.getNickname() != null ? user.getNickname() : user.getName();
     }
 }
-

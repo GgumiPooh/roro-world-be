@@ -1,5 +1,8 @@
 package com.ggumipooh.hanroroworld.be.service;
 
+import com.ggumipooh.hanroroworld.be.dto.mapper.GalleryMapper;
+import com.ggumipooh.hanroroworld.be.dto.GalleryDetailDto;
+import com.ggumipooh.hanroroworld.be.dto.GalleryDto;
 import com.ggumipooh.hanroroworld.be.model.Gallery;
 import com.ggumipooh.hanroroworld.be.model.GalleryComment;
 import com.ggumipooh.hanroroworld.be.model.GalleryImage;
@@ -29,29 +32,43 @@ public class GalleryService {
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
-    public Page<Gallery> getGalleries(int page, int size) {
+    public Page<GalleryDto> getGalleryPage(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return galleryRepository.findAllByOrderByCreatedAtDesc(pageable);
+        return galleryRepository.findAllByOrderByCreatedAtDesc(pageable).map(gallery -> GalleryMapper.toDto(gallery,
+                (int) getCommentCount(gallery.getId())));
     }
 
     @Transactional(readOnly = true)
-    public Page<Gallery> searchGalleries(String keyword, int page, int size) {
+    public Page<GalleryDto> searchByKeyword(String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return galleryRepository.searchByTitle(keyword, pageable);
+        return galleryRepository.searchByTitle(keyword, pageable).map(gallery -> GalleryMapper.toDto(gallery,
+                (int) getCommentCount(gallery.getId())));
     }
 
     @Transactional(readOnly = true)
-    public Optional<Gallery> getById(Long id) {
-        return galleryRepository.findById(id);
+    public Optional<GalleryDetailDto> getById(Long id, Long userId) {
+        return galleryRepository.findById(id)
+                .map(gallery -> GalleryMapper.toDetailDto(gallery, getComments(gallery.getId()),
+                        isLikedByUser(id, userId)));
     }
 
     @Transactional
-    public Gallery save(Gallery gallery) {
-        return galleryRepository.save(gallery);
+    public GalleryDto save(GalleryDto galleryDto) {
+        if (galleryDto.getAuthorId() == null) {
+            throw new IllegalArgumentException("Author ID is required");
+        }
+
+        User user = userRepository.findById(galleryDto.getAuthorId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Gallery gallery = GalleryMapper.toEntity(galleryDto, user);
+        Gallery savedGallery = galleryRepository.save(gallery);
+
+        return GalleryMapper.toDto(savedGallery);
     }
 
     @Transactional
-    public Gallery createGallery(Long userId, String title, String description, List<String> imageUrls) {
+    public Gallery create(Long userId, String title, String description, List<String> imageUrls) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 

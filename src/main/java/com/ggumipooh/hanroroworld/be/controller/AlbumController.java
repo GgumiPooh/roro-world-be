@@ -28,12 +28,12 @@ public class AlbumController {
 
     @GetMapping("/{albumId}")
     public List<SongDto> getSongs(@PathVariable Long albumId) {
-        return SongMapper.toDtoList(songService.getSongsByAlbum(albumId));
+        return songService.getSongsByAlbum(albumId);
     }
 
     @GetMapping("/song/{songId}")
     public SongDto getSong(@PathVariable Long songId) {
-        return SongMapper.toDto(songService.getById(songId));
+        return songService.getById(songId);
     }
 
 }

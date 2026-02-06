@@ -11,10 +11,13 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
+    @Value("${app.frontend.url.localhost}")
+    private String frontendUrlLocalhost;
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // 모든 경로에 대해
-                .allowedOrigins(frontendUrl) // 프론트엔드 주소 (환경변수)
+                .allowedOrigins(frontendUrl, frontendUrlLocalhost) // 프론트엔드 주소 (환경변수)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true); // 인증 정보 포함 허용 시 true

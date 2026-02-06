@@ -27,9 +27,8 @@ public class GalleryController {
     private final GalleryService galleryService;
     private final TokenService tokenService;
 
-    /**
-     * 갤러리 목록 조회
-     */
+
+     // 갤러리 목록 조회
     @GetMapping
     public ResponseEntity<Page<GalleryDto>> list(
             @RequestParam(defaultValue = "0") int page,
@@ -37,9 +36,7 @@ public class GalleryController {
         return ResponseEntity.ok(galleryService.getGalleryPage(page, size));
     }
 
-    /**
-     * 갤러리 검색
-     */
+    // 갤러리 검색
     @GetMapping("/search")
     public ResponseEntity<Page<GalleryDto>> search(
             @RequestParam String keyword,
@@ -48,9 +45,7 @@ public class GalleryController {
         return ResponseEntity.ok(galleryService.searchByKeyword(keyword, page, size));
     }
 
-    /**
-     * 갤러리 상세 조회
-     */
+    // 갤러리 상세 조회
     @GetMapping("/{id}")
     public ResponseEntity<?> detail(@PathVariable Long id, HttpServletRequest request) {
         User user = extractUser(request);
@@ -63,9 +58,7 @@ public class GalleryController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * 갤러리 생성
-     */
+    // 갤러리 생성
     @PostMapping
     public ResponseEntity<?> create(@RequestBody GalleryCreateRequest req, HttpServletRequest request) {
         User user = extractUser(request);
@@ -89,9 +82,7 @@ public class GalleryController {
         return ResponseEntity.ok(Map.of("id", gallery.getId()));
     }
 
-    /**
-     * 좋아요 토글
-     */
+    // 갤러리 좋아요 토글
     @PostMapping("/{id}/like")
     public ResponseEntity<?> toggleLike(@PathVariable Long id, HttpServletRequest request) {
         User user = extractUser(request);
@@ -103,9 +94,7 @@ public class GalleryController {
         return ResponseEntity.ok(Map.of("liked", liked));
     }
 
-    /**
-     * 댓글 작성
-     */
+    // 갤러리 댓글 작성
     @PostMapping("/{id}/comments")
     public ResponseEntity<?> addComment(
             @PathVariable Long id,
@@ -127,9 +116,7 @@ public class GalleryController {
         return ResponseEntity.ok(dto);
     }
 
-    /**
-     * 댓글 삭제
-     */
+    // 갤러리 댓글 삭제
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<?> deleteComment(@PathVariable Long commentId, HttpServletRequest request) {
         User user = extractUser(request);

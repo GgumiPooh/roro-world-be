@@ -71,7 +71,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
 			Collection<GrantedAuthority> authorities = Collections
 					.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
-			return new DefaultOAuth2User(authorities, normalized, "response");
+			return new DefaultOAuth2User(authorities, normalized, "id");
 
 		} else if ("kakao".equals(registrationId)) {
 			Map<String, Object> attributes = oauth2User.getAttributes();

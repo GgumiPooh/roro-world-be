@@ -41,14 +41,11 @@ public class SecurityConfig {
                 http
                                 .csrf(csrf -> csrf.disable())
                                 .cors(cors -> {
-                                }) // ✅ Security에서 CORS 활성화
+                                }) // Security에서 CORS 활성화
                                 .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/health", "/oauth2/**", "/login/**", "/api/auth/**",
-                                                                "/api/public/**",
+                                                .requestMatchers("/oauth2/**", "/login/**", "/api/auth/**",
+                                                                "/api/public/**", "/api/uploads/**",
                                                                 "/error")
-                                                .permitAll()
-                                                .requestMatchers(org.springframework.http.HttpMethod.GET,
-                                                                "/api/song/**/comments")
                                                 .permitAll()
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth -> oauth

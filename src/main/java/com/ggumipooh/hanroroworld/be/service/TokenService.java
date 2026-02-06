@@ -3,6 +3,8 @@ package com.ggumipooh.hanroroworld.be.service;
 import com.ggumipooh.hanroroworld.be.model.RefreshToken;
 import com.ggumipooh.hanroroworld.be.model.User;
 import com.ggumipooh.hanroroworld.be.repository.RefreshTokenRepository;
+import com.ggumipooh.hanroroworld.be.repository.UserRepository;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -21,16 +23,19 @@ import javax.crypto.spec.SecretKeySpec;
 public class TokenService {
 
 	private final RefreshTokenRepository refreshTokenRepository;
+	private final UserRepository userRepository;
 	private final byte[] jwtSecret;
 	private final int accessTtlSeconds;
 	private final int refreshTtlSeconds;
 
 	public TokenService(
 			RefreshTokenRepository refreshTokenRepository,
+			UserRepository userRepository,
 			@Value("${app.jwt.secret:local-dev-secret-change-me}") String jwtSecret,
 			@Value("${app.jwt.accessTokenTtlSeconds:3600}") int accessTtlSeconds,
 			@Value("${app.jwt.refreshTokenTtlSeconds:2592000}") int refreshTtlSeconds) {
 		this.refreshTokenRepository = refreshTokenRepository;
+		this.userRepository = userRepository;
 		this.jwtSecret = jwtSecret.getBytes(StandardCharsets.UTF_8);
 		this.accessTtlSeconds = accessTtlSeconds;
 		this.refreshTtlSeconds = refreshTtlSeconds;
@@ -126,6 +131,12 @@ public class TokenService {
 		} catch (NumberFormatException e) {
 			throw new IllegalArgumentException("Invalid sub");
 		}
+	}
+
+	public User verifyAndExtractUser(String jwt) {
+		Long userId = verifyAndExtractUserId(jwt);
+		return userRepository.findById(userId)
+				.orElseThrow(() -> new IllegalArgumentException("User not found"));
 	}
 
 	private static boolean constantTimeEquals(String a, String b) {

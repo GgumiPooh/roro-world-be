@@ -1,6 +1,7 @@
 package com.ggumipooh.hanroroworld.be.service;
 
-import com.ggumipooh.hanroroworld.be.model.Song;
+import com.ggumipooh.hanroroworld.be.dto.SongDto;
+import com.ggumipooh.hanroroworld.be.dto.mapper.SongMapper;
 import com.ggumipooh.hanroroworld.be.repository.SongRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -14,16 +15,15 @@ public class SongService {
 
     private final SongRepository songRepository;
 
-    public List<Song> getAll() {
-        return songRepository.findAll();
+    public List<SongDto> getAll() {
+        return songRepository.findAll().stream().map(SongMapper::toDto).toList();
     }
 
-    public Song getById(Long id) {
-        return songRepository.findById(id).orElse(null);
+    public SongDto getById(Long id) {
+        return songRepository.findById(id).map(SongMapper::toDto).orElse(null);
     }
 
-    public List<Song> getSongsByAlbum(Long albumId) {
-        System.out.println("albumId: " + songRepository.findByAlbumId(albumId));
-        return songRepository.findByAlbumId(albumId);
+    public List<SongDto> getSongsByAlbum(Long albumId) {
+        return songRepository.findByAlbumId(albumId).stream().map(SongMapper::toDto).toList();
     }
 }

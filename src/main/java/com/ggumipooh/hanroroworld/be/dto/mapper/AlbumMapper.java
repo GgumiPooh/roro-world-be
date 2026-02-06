@@ -20,6 +20,7 @@ public final class AlbumMapper {
         dto.setPublishedAt(album.getPublishedAt());
         dto.setDescription(album.getDescription());
         dto.setMetadata(album.getMetadata());
+        dto.setAlbumType(album.getType());
         return dto;
     }
 

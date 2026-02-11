@@ -66,6 +66,9 @@ public class SecurityConfig {
                                                                         .orElse(null);
                                                         if (user != null) {
                                                                 var pair = tokenService.issueTokens(user);
+                                                                // 쿠키 도메인: 프론트엔드 URL에서 추출 (.roroworld.org)
+                                                                String cookieDomain = extractCookieDomain(frontendUrl);
+                                                                boolean isSecure = frontendUrl.startsWith("https");
                                                                 // Cookies: HttpOnly + Secure
                                                                 CookieUtil.addHttpOnlyCookie(res, "access_token",
                                                                                 pair.accessToken(),
@@ -74,7 +77,7 @@ public class SecurityConfig {
                                                                                                 - java.time.Instant
                                                                                                                 .now()
                                                                                                                 .getEpochSecond()),
-                                                                                "/", true, "None");
+                                                                                "/", isSecure, "None", cookieDomain);
                                                                 CookieUtil.addHttpOnlyCookie(res, "refresh_token",
                                                                                 pair.refreshToken(),
                                                                                 (int) (pair.refreshExpiresAt()
@@ -82,7 +85,7 @@ public class SecurityConfig {
                                                                                                 - java.time.Instant
                                                                                                                 .now()
                                                                                                                 .getEpochSecond()),
-                                                                                "/api/auth", true, "None");
+                                                                                "/api/auth", isSecure, "None", cookieDomain);
                                                         }
                                                         // 신규 유저면 동의 페이지로, 기존 유저면 홈으로
                                                         Object isNewUserAttr = auth
@@ -103,5 +106,27 @@ public class SecurityConfig {
                                                                                         java.nio.charset.StandardCharsets.UTF_8));
                                                 }));
                 return http.build();
+        }
+
+        private String extractCookieDomain(String url) {
+                // localhost인 경우 null 반환 (도메인 설정 안 함)
+                if (url.contains("localhost")) {
+                        return null;
+                }
+                try {
+                        java.net.URI uri = new java.net.URI(url);
+                        String host = uri.getHost();
+                        if (host != null && host.contains(".")) {
+                                // .roroworld.org 형태로 반환 (서브도메인 공유)
+                                int firstDot = host.indexOf('.');
+                                if (host.substring(firstDot).split("\\.").length >= 2) {
+                                        return host.substring(firstDot); // .roroworld.org
+                                }
+                                return "." + host; // .roroworld.org
+                        }
+                        return null;
+                } catch (Exception e) {
+                        return null;
+                }
         }
 }

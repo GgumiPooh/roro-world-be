@@ -39,3 +39,4 @@ out/
 /src/main/resources/application.properties
 /src/main/java/com/ggumipooh/hanroroworld/be/ActivityDataInitializer.java
 .env
+.env.log

@@ -38,6 +38,9 @@ dependencies {
     implementation 'com.vladmihalcea:hibernate-types-60:2.21.1'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
+	// Cloudflare R2
+	implementation platform('software.amazon.awssdk:bom:2.25.16')
+	implementation 'software.amazon.awssdk:s3'
 }
 
 tasks.named('test') {

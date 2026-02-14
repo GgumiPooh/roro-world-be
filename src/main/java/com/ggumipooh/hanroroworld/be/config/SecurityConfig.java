@@ -55,7 +55,7 @@ public class SecurityConfig {
                                                 .redirectionEndpoint(redir -> redir.baseUri("/login/oauth2/code/*"))
                                                 .userInfoEndpoint(cfg -> cfg.userService(customOAuth2UserService))
                                                 .successHandler((req, res, auth) -> {
-                                                        // Issue our own tokens on successful OAuth login
+
                                                         String provider = (auth instanceof OAuth2AuthenticationToken t)
                                                                         ? t.getAuthorizedClientRegistrationId()
                                                                         : "unknown";
@@ -66,10 +66,11 @@ public class SecurityConfig {
                                                                         .orElse(null);
                                                         if (user != null) {
                                                                 var pair = tokenService.issueTokens(user);
-                                                                // 쿠키 도메인: 프론트엔드 URL에서 추출 (.roroworld.org)
-                                                                String cookieDomain = extractCookieDomain(frontendUrl);
+
                                                                 boolean isSecure = frontendUrl.startsWith("https");
-                                                                // Cookies: HttpOnly + Secure
+                                                                // SameSite=None은 Secure=true 필수! 로컬은 Lax 사용
+                                                                String sameSite = isSecure ? "None" : "Lax";
+                                                                // Cookies: HttpOnly + Secure (Domain 생략 → API 서버 전용)
                                                                 CookieUtil.addHttpOnlyCookie(res, "access_token",
                                                                                 pair.accessToken(),
                                                                                 (int) (pair.accessExpiresAt()
@@ -77,7 +78,7 @@ public class SecurityConfig {
                                                                                                 - java.time.Instant
                                                                                                                 .now()
                                                                                                                 .getEpochSecond()),
-                                                                                "/", isSecure, "None", cookieDomain);
+                                                                                "/", isSecure, sameSite, null);
                                                                 CookieUtil.addHttpOnlyCookie(res, "refresh_token",
                                                                                 pair.refreshToken(),
                                                                                 (int) (pair.refreshExpiresAt()
@@ -85,8 +86,12 @@ public class SecurityConfig {
                                                                                                 - java.time.Instant
                                                                                                                 .now()
                                                                                                                 .getEpochSecond()),
-                                                                                "/api/auth", isSecure, "None", cookieDomain);
+                                                                                "/api/auth", isSecure, sameSite,
+                                                                                null);
                                                         }
+                                                        // 세션 무효화 (JWT만 사용)
+                                                        req.getSession().invalidate();
+
                                                         // 신규 유저면 동의 페이지로, 기존 유저면 홈으로
                                                         Object isNewUserAttr = auth
                                                                         .getPrincipal() instanceof org.springframework.security.oauth2.core.user.OAuth2User oauth2User
@@ -108,25 +113,4 @@ public class SecurityConfig {
                 return http.build();
         }
 
-        private String extractCookieDomain(String url) {
-                // localhost인 경우 null 반환 (도메인 설정 안 함)
-                if (url.contains("localhost")) {
-                        return null;
-                }
-                try {
-                        java.net.URI uri = new java.net.URI(url);
-                        String host = uri.getHost();
-                        if (host != null && host.contains(".")) {
-                                // .roroworld.org 형태로 반환 (서브도메인 공유)
-                                int firstDot = host.indexOf('.');
-                                if (host.substring(firstDot).split("\\.").length >= 2) {
-                                        return host.substring(firstDot); // .roroworld.org
-                                }
-                                return "." + host; // .roroworld.org
-                        }
-                        return null;
-                } catch (Exception e) {
-                        return null;
-                }
-        }
 }

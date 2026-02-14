@@ -63,6 +63,7 @@ public final class GalleryMapper {
                 .id(gallery.getId())
                 .title(gallery.getTitle())
                 .description(gallery.getDescription())
+                .authorId(gallery.getUser() != null ? gallery.getUser().getId() : null)
                 .authorName(gallery.getUser() != null ? gallery.getUser().getNickname() : "익명")
                 .imageUrls(imageUrls)
                 .likeCount(gallery.getLikeCount())

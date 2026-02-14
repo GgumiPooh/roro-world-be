@@ -24,6 +24,9 @@ public class AuthController {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
 
+    @org.springframework.beans.factory.annotation.Value("${app.frontend.url:http://localhost:5173}")
+    private String frontendUrl;
+
     @GetMapping("/sign-in")
     public String signIn() {
         return "Hello World";
@@ -65,14 +68,14 @@ public class AuthController {
                 return "user_not_found";
             }
             var pair = tokenService.issueTokens(user);
+            boolean isSecure = frontendUrl.startsWith("https");
+            String sameSite = isSecure ? "None" : "Lax";
             CookieUtil.addHttpOnlyCookie(response, "access_token", pair.accessToken(),
-                    (int) (pair.accessExpiresAt().getEpochSecond() - Instant.now().getEpochSecond()), "/", true,
-                    "None");
-            // 로컬 개발 환경에서는 Lax
+                    (int) (pair.accessExpiresAt().getEpochSecond() - Instant.now().getEpochSecond()), "/", isSecure,
+                    sameSite, null);
             CookieUtil.addHttpOnlyCookie(response, "refresh_token", pair.refreshToken(),
                     (int) (pair.refreshExpiresAt().getEpochSecond() - Instant.now().getEpochSecond()), "/api/auth",
-                    true, "None");
-            // 로컬 개발 환경에서는 Strict
+                    isSecure, sameSite, null);
             return "ok";
         } catch (Exception e) {
             response.setStatus(500);
@@ -82,10 +85,10 @@ public class AuthController {
 
     @PostMapping("/logout")
     public Object logout(HttpServletResponse response) {
-        CookieUtil.addHttpOnlyCookie(response, "access_token", "", 0, "/", true, "None");
-        // 로컬 개발 환경에서는 Lax
-        CookieUtil.addHttpOnlyCookie(response, "refresh_token", "", 0, "/api/auth", true, "None");
-        // 로컬 개발 환경에서는 Strict
+        boolean isSecure = frontendUrl.startsWith("https");
+        String sameSite = isSecure ? "None" : "Lax";
+        CookieUtil.addHttpOnlyCookie(response, "access_token", "", 0, "/", isSecure, sameSite, null);
+        CookieUtil.addHttpOnlyCookie(response, "refresh_token", "", 0, "/api/auth", isSecure, sameSite, null);
         return "ok";
     }
 
@@ -97,13 +100,11 @@ public class AuthController {
             return "no_access_token";
         }
         try {
-            long userId = tokenService.verifyAndExtractUserId(accessToken);
-            var user = userRepository.findById(java.util.Objects.requireNonNull(Long.valueOf(userId))).orElse(null);
-            if (user == null) {
-                response.setStatus(401);
-                return "user_not_found";
-            }
-            return java.util.Map.of("name", user.getNickname() != null ? user.getNickname() : user.getName());
+            // JWT에서 직접 추출 (DB 쿼리 없음 → 빠름!)
+            var claims = tokenService.verifyAndExtractClaims(accessToken);
+            return java.util.Map.of(
+                    "id", claims.get("id"),
+                    "name", claims.get("name"));
         } catch (IllegalArgumentException ex) {
             response.setStatus(401);
             return "invalid_or_expired_token";
@@ -133,8 +134,10 @@ public class AuthController {
             userRepository.delete(user);
 
             // 쿠키 삭제 (로그아웃 처리)
-            CookieUtil.addHttpOnlyCookie(response, "access_token", "", 0, "/", true, "None");
-            CookieUtil.addHttpOnlyCookie(response, "refresh_token", "", 0, "/api/auth", true, "None");
+            boolean isSecure = frontendUrl.startsWith("https");
+            String sameSite = isSecure ? "None" : "Lax";
+            CookieUtil.addHttpOnlyCookie(response, "access_token", "", 0, "/", isSecure, sameSite, null);
+            CookieUtil.addHttpOnlyCookie(response, "refresh_token", "", 0, "/api/auth", isSecure, sameSite, null);
 
             return "ok";
         } catch (IllegalArgumentException ex) {
@@ -187,6 +190,14 @@ public class AuthController {
 
             user.setNickname(trimmedNickname);
             userRepository.save(user);
+
+            // 토큰 재발급 (새 닉네임 반영)
+            var pair = tokenService.issueTokens(user);
+            boolean isSecure = frontendUrl.startsWith("https");
+            String sameSite = isSecure ? "None" : "Lax";
+            CookieUtil.addHttpOnlyCookie(response, "access_token", pair.accessToken(),
+                    (int) (pair.accessExpiresAt().getEpochSecond() - java.time.Instant.now().getEpochSecond()),
+                    "/", isSecure, sameSite, null);
 
             return java.util.Map.of("nickname", user.getNickname());
         } catch (IllegalArgumentException ex) {

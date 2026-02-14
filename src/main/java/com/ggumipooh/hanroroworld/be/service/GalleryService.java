@@ -174,4 +174,19 @@ public class GalleryService {
 
         commentRepository.delete(comment);
     }
+
+    // ===== 갤러리 삭제 =====
+
+    @Transactional
+    public void deleteGallery(Long galleryId, Long userId) {
+        Gallery gallery = galleryRepository.findById(galleryId)
+                .orElseThrow(() -> new IllegalArgumentException("Gallery not found"));
+
+        if (!gallery.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("Not authorized to delete this gallery");
+        }
+
+        // 연관된 좋아요, 댓글은 cascade로 삭제됨
+        galleryRepository.delete(gallery);
+    }
 }

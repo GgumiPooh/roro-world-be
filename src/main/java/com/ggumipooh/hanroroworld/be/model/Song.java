@@ -33,6 +33,9 @@ public class Song extends BaseEntity {
     private Album album;
 
     @Column
+    private Integer trackNumber;
+
+    @Column
     @JdbcTypeCode(SqlTypes.JSON)
     private List<Metadata> metadata;
 

@@ -17,4 +17,5 @@ public class SongDto {
     private List<LanguageData> lyrics;
     private List<Metadata> metadata;
     private Long albumId;
+    private Integer trackNumber;
 }

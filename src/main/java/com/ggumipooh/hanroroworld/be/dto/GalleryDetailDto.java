@@ -14,6 +14,7 @@ public class GalleryDetailDto {
     private Long id;
     private String title;
     private String description;
+    private Long authorId;
     private String authorName;
     private List<String> imageUrls;
     private Integer likeCount;

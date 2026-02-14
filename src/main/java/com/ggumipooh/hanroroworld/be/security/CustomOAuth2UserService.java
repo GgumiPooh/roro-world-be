@@ -56,7 +56,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 			if (isNewUser) {
 				userRepository.save(Objects.requireNonNull(
 						User.builder()
-								.name(nicknameToSave)
+								.name(nicknameToSave) // 원본 이름 (변경 불가)
+								.nickname(nicknameToSave) // 표시 이름 (변경 가능)
 								.provider(registrationId)
 								.providerId(providerUserId)
 								.build()));
@@ -113,7 +114,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 			if (isNewUser) {
 				userRepository.save(Objects.requireNonNull(
 						User.builder()
-								.nickname(nicknameToSave)
+								.name(nicknameToSave) // 원본 이름 (변경 불가)
+								.nickname(nicknameToSave) // 표시 이름 (변경 가능)
 								.provider(registrationId)
 								.providerId(providerUserId)
 								.build()));
@@ -136,11 +138,13 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 		}
 		if (providerId != null) {
 			if (userRepository.findByProviderAndProviderId(registrationId, providerId).isEmpty()) {
+				String nameToSave = (rawNickname == null || rawNickname.isBlank())
+						? (registrationId + "_" + providerId)
+						: rawNickname;
 				userRepository.save(Objects.requireNonNull(
 						User.builder()
-								.nickname((rawNickname == null || rawNickname.isBlank())
-										? (registrationId + "_" + providerId)
-										: rawNickname)
+								.name(nameToSave) // 원본 이름 (변경 불가)
+								.nickname(nameToSave) // 표시 이름 (변경 가능)
 								.provider(registrationId)
 								.providerId(providerId)
 								.build()));

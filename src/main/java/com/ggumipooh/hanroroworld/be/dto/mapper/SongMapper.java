@@ -21,6 +21,7 @@ public final class SongMapper {
         dto.setLyrics(song.getLyrics());
         dto.setMetadata(song.getMetadata());
         dto.setAlbumId(song.getAlbum() != null ? song.getAlbum().getId() : null);
+        dto.setTrackNumber(song.getTrackNumber());
         return dto;
     }
 

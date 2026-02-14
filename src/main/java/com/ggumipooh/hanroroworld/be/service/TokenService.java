@@ -50,9 +50,11 @@ public class TokenService {
 		Instant accessExp = now.plusSeconds(accessTtlSeconds);
 		Instant refreshExp = now.plusSeconds(refreshTtlSeconds);
 
+		// nickname을 저장 (표시용 이름)
+		String displayName = user.getNickname() != null ? user.getNickname() : user.getName();
 		String accessJwt = createJwt(Map.of(
 				"sub", String.valueOf(user.getId()),
-				"nickname", user.getNickname() == null ? "" : user.getNickname(),
+				"name", displayName == null ? "" : displayName,
 				"iat", now.getEpochSecond(),
 				"exp", accessExp.getEpochSecond()));
 
@@ -137,6 +139,45 @@ public class TokenService {
 		Long userId = verifyAndExtractUserId(jwt);
 		return userRepository.findById(userId)
 				.orElseThrow(() -> new IllegalArgumentException("User not found"));
+	}
+
+	/**
+	 * JWT에서 사용자 정보를 직접 추출 (DB 쿼리 없음)
+	 */
+	public Map<String, Object> verifyAndExtractClaims(String jwt) {
+		if (jwt == null || jwt.isBlank()) {
+			throw new IllegalArgumentException("Missing token");
+		}
+		String[] parts = jwt.split("\\.");
+		if (parts.length != 3) {
+			throw new IllegalArgumentException("Invalid token format");
+		}
+		String header = parts[0];
+		String payload = parts[1];
+		String signature = parts[2];
+
+		// Verify signature
+		String expectedSig = hmacSha256(header + "." + payload, jwtSecret);
+		if (!constantTimeEquals(signature, expectedSig)) {
+			throw new IllegalArgumentException("Invalid token signature");
+		}
+
+		// Decode payload
+		String payloadJson = new String(base64UrlDecode(payload), StandardCharsets.UTF_8);
+
+		// Extract exp
+		Long exp = extractLongValue(payloadJson, "\"exp\"");
+		if (exp == null || Instant.now().getEpochSecond() >= exp) {
+			throw new IllegalArgumentException("Token expired");
+		}
+
+		// Extract claims
+		String sub = extractStringOrNumberValue(payloadJson, "\"sub\"");
+		String name = extractStringOrNumberValue(payloadJson, "\"name\"");
+
+		return Map.of(
+				"id", sub != null ? Long.parseLong(sub) : 0L,
+				"name", name != null ? name : "");
 	}
 
 	private static boolean constantTimeEquals(String a, String b) {

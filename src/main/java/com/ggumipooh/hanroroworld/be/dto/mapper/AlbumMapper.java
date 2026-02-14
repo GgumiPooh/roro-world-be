@@ -2,6 +2,7 @@ package com.ggumipooh.hanroroworld.be.dto.mapper;
 
 import com.ggumipooh.hanroroworld.be.dto.AlbumDto;
 import com.ggumipooh.hanroroworld.be.model.Album;
+import com.ggumipooh.hanroroworld.be.model.Song;
 
 import java.util.List;
 import java.util.Objects;
@@ -21,7 +22,23 @@ public final class AlbumMapper {
         dto.setDescription(album.getDescription());
         dto.setMetadata(album.getMetadata());
         dto.setAlbumType(album.getType());
+        dto.setSongs(toSongDtoList(album.getSongs()));
         return dto;
+    }
+
+    private static List<AlbumDto.AlbumSongDto> toSongDtoList(List<Song> songs) {
+        if (songs == null) {
+            return List.of();
+        }
+        return songs.stream()
+                .filter(Objects::nonNull)
+                .map(song -> {
+                    AlbumDto.AlbumSongDto songDto = new AlbumDto.AlbumSongDto();
+                    songDto.setId(song.getId());
+                    songDto.setTrackNumber(song.getTrackNumber());
+                    return songDto;
+                })
+                .toList();
     }
 
     public static List<AlbumDto> toDtoList(List<Album> albums) {

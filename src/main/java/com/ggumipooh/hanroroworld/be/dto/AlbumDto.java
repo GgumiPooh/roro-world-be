@@ -17,4 +17,12 @@ public class AlbumDto {
     private List<LanguageData> description;
     private List<Metadata> metadata;
     private String albumType;
+    private List<AlbumSongDto> songs;
+
+    @Getter
+    @Setter
+    public static class AlbumSongDto {
+        private Long id;
+        private Integer trackNumber;
+    }
 }

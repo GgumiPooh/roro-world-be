@@ -4,18 +4,22 @@ import com.ggumipooh.hanroroworld.be.dto.NicknameRequest;
 import com.ggumipooh.hanroroworld.be.repository.UserRepository;
 import com.ggumipooh.hanroroworld.be.repository.RefreshTokenRepository;
 import com.ggumipooh.hanroroworld.be.model.RefreshToken;
-import java.time.Instant;
+import com.ggumipooh.hanroroworld.be.security.SecurityUtil;
 import com.ggumipooh.hanroroworld.be.service.TokenService;
-import org.springframework.transaction.annotation.Transactional;
 import com.ggumipooh.hanroroworld.be.util.CookieUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
+import java.util.Map;
+import java.util.Objects;
+
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
@@ -27,24 +31,10 @@ public class AuthController {
     @org.springframework.beans.factory.annotation.Value("${app.frontend.url:http://localhost:5173}")
     private String frontendUrl;
 
-    @GetMapping("/sign-in")
-    public String signIn() {
-        return "Hello World";
-    }
-
-    @GetMapping("/sign-up")
-    public String signUp() {
-        return "Hello World";
-    }
-
-    @GetMapping("/me")
-    public Object me(@AuthenticationPrincipal OAuth2User user) {
-        if (user == null) {
-            return "anonymous";
-        }
-        return user.getAttributes();
-    }
-
+    /**
+     * refresh_token 쿠키로 새 토큰 쌍 발급.
+     * refresh_token은 Path=/api/auth 전용이므로 직접 쿠키에서 읽어야 함.
+     */
     @PostMapping("/refresh")
     public Object refresh(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = readCookie(request, "refresh_token");
@@ -62,7 +52,7 @@ public class AuthController {
             }
             existing.setRevoked(true);
             refreshTokenRepository.save(existing);
-            var user = userRepository.findById(java.util.Objects.requireNonNull(existing.getUserId())).orElse(null);
+            var user = userRepository.findById(Objects.requireNonNull(existing.getUserId())).orElse(null);
             if (user == null) {
                 response.setStatus(401);
                 return "user_not_found";
@@ -93,38 +83,26 @@ public class AuthController {
     }
 
     @GetMapping("/name")
-    public Object currentUserName(HttpServletRequest request, HttpServletResponse response) {
-        String accessToken = readCookie(request, "access_token");
-        if (accessToken == null || accessToken.isBlank()) {
+    public Object currentUserName(HttpServletResponse response) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        if (userId == null) {
             response.setStatus(401);
             return "no_access_token";
         }
-        try {
-            // JWT에서 직접 추출 (DB 쿼리 없음 → 빠름!)
-            var claims = tokenService.verifyAndExtractClaims(accessToken);
-            return java.util.Map.of(
-                    "id", claims.get("id"),
-                    "name", claims.get("name"));
-        } catch (IllegalArgumentException ex) {
-            response.setStatus(401);
-            return "invalid_or_expired_token";
-        } catch (Exception ex) {
-            response.setStatus(500);
-            return "failed_to_load_name";
-        }
+        String name = SecurityUtil.getCurrentUserName();
+        return Map.of("id", userId, "name", name != null ? name : "");
     }
 
     @Transactional
     @DeleteMapping("/delete")
-    public Object deleteAccount(HttpServletRequest request, HttpServletResponse response) {
-        String accessToken = readCookie(request, "access_token");
-        if (accessToken == null || accessToken.isBlank()) {
+    public Object deleteAccount(HttpServletResponse response) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        if (userId == null) {
             response.setStatus(401);
             return "no_access_token";
         }
         try {
-            long userId = tokenService.verifyAndExtractUserId(accessToken);
-            var user = userRepository.findById(Long.valueOf(userId)).orElse(null);
+            var user = userRepository.findById(userId).orElse(null);
             if (user == null) {
                 response.setStatus(401);
                 return "user_not_found";
@@ -140,13 +118,10 @@ public class AuthController {
             CookieUtil.addHttpOnlyCookie(response, "refresh_token", "", 0, "/api/auth", isSecure, sameSite, null);
 
             return "ok";
-        } catch (IllegalArgumentException ex) {
-            response.setStatus(401);
-            return "invalid_or_expired_token";
         } catch (Exception ex) {
-            ex.printStackTrace();
+            log.error("Failed to delete account", ex);
             response.setStatus(500);
-            return "failed_to_delete_account: " + ex.getMessage();
+            return "failed_to_delete_account";
         }
     }
 
@@ -154,16 +129,14 @@ public class AuthController {
     @PutMapping("/nickname")
     public Object updateNickname(
             @RequestBody NicknameRequest request,
-            HttpServletRequest httpRequest,
             HttpServletResponse response) {
-        String accessToken = readCookie(httpRequest, "access_token");
-        if (accessToken == null || accessToken.isBlank()) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        if (userId == null) {
             response.setStatus(401);
             return "no_access_token";
         }
         try {
-            long userId = tokenService.verifyAndExtractUserId(accessToken);
-            var user = userRepository.findById(Long.valueOf(userId)).orElse(null);
+            var user = userRepository.findById(userId).orElse(null);
             if (user == null) {
                 response.setStatus(401);
                 return "user_not_found";
@@ -179,7 +152,7 @@ public class AuthController {
 
             // 현재 닉네임과 같으면 변경 없이 성공
             if (trimmedNickname.equals(user.getNickname())) {
-                return java.util.Map.of("nickname", user.getNickname());
+                return Map.of("nickname", user.getNickname());
             }
 
             // 중복 체크
@@ -196,27 +169,26 @@ public class AuthController {
             boolean isSecure = frontendUrl.startsWith("https");
             String sameSite = isSecure ? "None" : "Lax";
             CookieUtil.addHttpOnlyCookie(response, "access_token", pair.accessToken(),
-                    (int) (pair.accessExpiresAt().getEpochSecond() - java.time.Instant.now().getEpochSecond()),
+                    (int) (pair.accessExpiresAt().getEpochSecond() - Instant.now().getEpochSecond()),
                     "/", isSecure, sameSite, null);
 
-            return java.util.Map.of("nickname", user.getNickname());
-        } catch (IllegalArgumentException ex) {
-            response.setStatus(401);
-            return "invalid_or_expired_token";
+            return Map.of("nickname", user.getNickname());
         } catch (Exception ex) {
-            ex.printStackTrace();
+            log.error("Failed to update nickname", ex);
             response.setStatus(500);
-            return "failed_to_update_nickname: " + ex.getMessage();
+            return "failed_to_update_nickname";
         }
     }
 
+    /**
+     * refresh_token 쿠키 전용 헬퍼.
+     * access_token은 JwtAuthenticationFilter → SecurityContext로 처리됨.
+     */
     private static String readCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
-        if (cookies == null)
-            return null;
+        if (cookies == null) return null;
         for (Cookie c : cookies) {
-            if (name.equals(c.getName()))
-                return c.getValue();
+            if (name.equals(c.getName())) return c.getValue();
         }
         return null;
     }

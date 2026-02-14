@@ -19,7 +19,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**") // 모든 경로에 대해
                 .allowedOrigins(frontendUrl, frontendUrlLocalhost) // 프론트엔드 주소 (환경변수)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
+                .allowedHeaders("Content-Type", "Accept", "Origin", "X-Requested-With")
                 .allowCredentials(true); // 인증 정보 포함 허용 시 true
     }
 }

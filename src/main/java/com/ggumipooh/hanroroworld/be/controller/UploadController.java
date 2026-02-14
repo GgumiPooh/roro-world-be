@@ -1,9 +1,6 @@
 package com.ggumipooh.hanroroworld.be.controller;
 
-import com.ggumipooh.hanroroworld.be.model.User;
-import com.ggumipooh.hanroroworld.be.service.TokenService;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
+import com.ggumipooh.hanroroworld.be.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +20,6 @@ import java.util.UUID;
 @RequestMapping("/api/uploads")
 public class UploadController {
 
-    private final TokenService tokenService;
     private final S3Presigner s3Presigner;
     private final S3Client s3Client;
 
@@ -37,14 +33,14 @@ public class UploadController {
      * 1단계: presigned URL 발급
      */
     @PostMapping("/prepare")
-    public ResponseEntity<?> prepare(@RequestBody PrepareRequest req, HttpServletRequest httpReq) {
-        User user = extractUser(httpReq);
-        if (user == null) {
+    public ResponseEntity<?> prepare(@RequestBody PrepareRequest req) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        if (userId == null) {
             return ResponseEntity.status(401).body("unauthorized");
         }
 
         String ext = extractExtension(req.filename());
-        String objectKey = "gallery/" + user.getId() + "/" + UUID.randomUUID() + ext;
+        String objectKey = "gallery/" + userId + "/" + UUID.randomUUID() + ext;
 
         var presignReq = PutObjectPresignRequest.builder()
                 .signatureDuration(Duration.ofMinutes(10))
@@ -63,14 +59,14 @@ public class UploadController {
      * 2단계: 업로드 완료 확인 (HEAD로 파일 존재 확인)
      */
     @PostMapping("/confirm")
-    public ResponseEntity<?> confirm(@RequestBody ConfirmRequest req, HttpServletRequest httpReq) {
-        User user = extractUser(httpReq);
-        if (user == null) {
+    public ResponseEntity<?> confirm(@RequestBody ConfirmRequest req) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        if (userId == null) {
             return ResponseEntity.status(401).body("unauthorized");
         }
 
         // 본인 파일인지 확인
-        if (!req.objectKey().startsWith("gallery/" + user.getId() + "/")) {
+        if (!req.objectKey().startsWith("gallery/" + userId + "/")) {
             return ResponseEntity.status(403).body("forbidden");
         }
 
@@ -85,25 +81,6 @@ public class UploadController {
 
         String fileUrl = publicUrl + "/" + req.objectKey();
         return ResponseEntity.ok(Map.of("url", fileUrl));
-    }
-
-    private User extractUser(HttpServletRequest request) {
-        String token = readCookie(request, "access_token");
-        if (token == null) return null;
-        try {
-            return tokenService.verifyAndExtractUser(token);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private String readCookie(HttpServletRequest request, String name) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) return null;
-        for (Cookie c : cookies) {
-            if (name.equals(c.getName())) return c.getValue();
-        }
-        return null;
     }
 
     private String extractExtension(String filename) {

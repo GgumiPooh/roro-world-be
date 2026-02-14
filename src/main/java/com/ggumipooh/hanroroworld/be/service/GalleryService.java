@@ -3,6 +3,8 @@ package com.ggumipooh.hanroroworld.be.service;
 import com.ggumipooh.hanroroworld.be.dto.mapper.GalleryMapper;
 import com.ggumipooh.hanroroworld.be.dto.GalleryDetailDto;
 import com.ggumipooh.hanroroworld.be.dto.GalleryDto;
+
+import java.util.Map;
 import com.ggumipooh.hanroroworld.be.model.Gallery;
 import com.ggumipooh.hanroroworld.be.model.GalleryComment;
 import com.ggumipooh.hanroroworld.be.model.GalleryImage;
@@ -108,7 +110,7 @@ public class GalleryService {
     }
 
     @Transactional
-    public boolean toggleLike(Long galleryId, Long userId) {
+    public Map<String, Object> toggleLike(Long galleryId, Long userId) {
         Gallery gallery = galleryRepository.findById(galleryId)
                 .orElseThrow(() -> new IllegalArgumentException("Gallery not found"));
         User user = userRepository.findById(userId)
@@ -116,12 +118,12 @@ public class GalleryService {
 
         Optional<GalleryLike> existingLike = likeRepository.findByGalleryIdAndUserId(galleryId, userId);
 
+        boolean liked;
         if (existingLike.isPresent()) {
             // 이미 좋아요 -> 취소
             likeRepository.delete(existingLike.get());
             gallery.decrementLikeCount();
-            galleryRepository.save(gallery);
-            return false; // 좋아요 취소됨
+            liked = false;
         } else {
             // 좋아요 추가
             GalleryLike like = GalleryLike.builder()
@@ -130,9 +132,14 @@ public class GalleryService {
                     .build();
             likeRepository.save(like);
             gallery.incrementLikeCount();
-            galleryRepository.save(gallery);
-            return true; // 좋아요 됨
+            liked = true;
         }
+        galleryRepository.save(gallery);
+        
+        return Map.of(
+                "liked", liked,
+                "likeCount", gallery.getLikeCount()
+        );
     }
 
     // ===== 댓글 기능 =====

@@ -16,8 +16,13 @@ import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResp
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -33,6 +38,9 @@ public class SecurityConfig {
 
         @org.springframework.beans.factory.annotation.Value("${app.frontend.url:http://localhost:5173}")
         private String frontendUrl;
+
+        @org.springframework.beans.factory.annotation.Value("${app.frontend.url.localhost:http://localhost:5173}")
+        private String frontendUrlLocalhost;
 
         public SecurityConfig(CustomOAuth2UserService customOAuth2UserService,
                         TokenService tokenService,
@@ -57,10 +65,15 @@ public class SecurityConfig {
                                 // 3) SameSite=Lax (로컬) / SameSite=None+Secure (프로덕션) 쿠키 속성
                                 // 4) JWT 인증 필터가 모든 요청에서 토큰 검증
                                 .csrf(csrf -> csrf.disable())
-                                .cors(cors -> {
-                                })
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                // SecurityContext를 세션이 아닌 요청 속성에만 저장
+                                // → JSESSIONID에 인증 정보가 남지 않음 (JWT만으로 인증)
+                                // OAuth2 authorization request 저장은 별도 메커니즘이므로 영향 없음
+                                .securityContext(sc -> sc
+                                                .securityContextRepository(
+                                                                new RequestAttributeSecurityContextRepository()))
                                 // OAuth2 로그인 흐름에서 세션이 필요하므로 IF_REQUIRED 유지
-                                // 로그인 성공 후 세션은 invalidate() 처리됨
+                                // (authorization request 저장용, SecurityContext 저장과 무관)
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                                 .addFilterBefore(jwtAuthenticationFilter,
@@ -129,9 +142,22 @@ public class SecurityConfig {
                                                 })
                                                 .failureHandler((req, res, ex) -> {
                                                         log.error("OAuth2 login failed", ex);
-                                                        res.sendRedirect(frontendUrl + "/login?oauth2_error=login_failed");
+                                                        res.sendRedirect(frontendUrl
+                                                                        + "/login?oauth2_error=login_failed");
                                                 }));
                 return http.build();
         }
 
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration config = new CorsConfiguration();
+                config.setAllowedOrigins(List.of(frontendUrl, frontendUrlLocalhost));
+                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                config.setAllowedHeaders(List.of("Content-Type", "Accept", "Origin", "X-Requested-With"));
+                config.setAllowCredentials(true);
+
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", config);
+                return source;
+        }
 }

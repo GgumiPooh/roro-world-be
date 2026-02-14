@@ -31,10 +31,6 @@ public class AuthController {
     @org.springframework.beans.factory.annotation.Value("${app.frontend.url:http://localhost:5173}")
     private String frontendUrl;
 
-    /**
-     * refresh_token 쿠키로 새 토큰 쌍 발급.
-     * refresh_token은 Path=/api/auth 전용이므로 직접 쿠키에서 읽어야 함.
-     */
     @PostMapping("/refresh")
     public Object refresh(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = readCookie(request, "refresh_token");
@@ -73,12 +69,43 @@ public class AuthController {
         }
     }
 
+    @Transactional
     @PostMapping("/logout")
-    public Object logout(HttpServletResponse response) {
+    public Object logout(HttpServletRequest request, HttpServletResponse response) {
+        // 1) DB에서 refresh_token 무효화 (쿠키 삭제 실패해도 재로그인 방지)
+        String refreshToken = readCookie(request, "refresh_token");
+        if (refreshToken != null) {
+            try {
+                String hash = tokenService.hashRefreshToken(refreshToken);
+                refreshTokenRepository.findByTokenHashAndRevokedFalse(hash)
+                        .ifPresent(rt -> {
+                            rt.setRevoked(true);
+                            refreshTokenRepository.save(rt);
+                        });
+            } catch (Exception e) {
+                log.warn("Failed to revoke refresh token during logout", e);
+            }
+        }
+
+        // 2) 서버 세션 무효화 (JSESSIONID 기반 인증 제거)
+        jakarta.servlet.http.HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+
+        // 3) 쿠키 삭제 (access_token, refresh_token, JSESSIONID)
         boolean isSecure = frontendUrl.startsWith("https");
         String sameSite = isSecure ? "None" : "Lax";
         CookieUtil.addHttpOnlyCookie(response, "access_token", "", 0, "/", isSecure, sameSite, null);
         CookieUtil.addHttpOnlyCookie(response, "refresh_token", "", 0, "/api/auth", isSecure, sameSite, null);
+
+        // JSESSIONID 쿠키도 명시적으로 삭제
+        jakarta.servlet.http.Cookie jsessionCookie = new jakarta.servlet.http.Cookie("JSESSIONID", "");
+        jsessionCookie.setMaxAge(0);
+        jsessionCookie.setPath("/");
+        jsessionCookie.setHttpOnly(true);
+        response.addCookie(jsessionCookie);
+
         return "ok";
     }
 
@@ -186,9 +213,11 @@ public class AuthController {
      */
     private static String readCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
-        if (cookies == null) return null;
+        if (cookies == null)
+            return null;
         for (Cookie c : cookies) {
-            if (name.equals(c.getName())) return c.getValue();
+            if (name.equals(c.getName()))
+                return c.getValue();
         }
         return null;
     }

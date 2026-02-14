@@ -48,17 +48,26 @@ public class Gallery extends BaseEntity {
         image.setGallery(null);
     }
 
+    public Integer getViewCount() {
+        return this.viewCount != null ? this.viewCount : 0;
+    }
+
+    public Integer getLikeCount() {
+        return this.likeCount != null ? this.likeCount : 0;
+    }
+
     public void incrementViewCount() {
-        this.viewCount++;
+        this.viewCount = getViewCount() + 1;
     }
 
     public void incrementLikeCount() {
-        this.likeCount++;
+        this.likeCount = getLikeCount() + 1;
     }
 
     public void decrementLikeCount() {
-        if (this.likeCount > 0) {
-            this.likeCount--;
+        int current = getLikeCount();
+        if (current > 0) {
+            this.likeCount = current - 1;
         }
     }
 
